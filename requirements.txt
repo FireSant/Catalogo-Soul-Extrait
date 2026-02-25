@@ -1,0 +1,27 @@
+# ============================================================
+#  Soul Extrait — Dependencias del Proyecto
+# ============================================================
+
+# --- Módulo A: Orquestador de Entrada ---
+pandas==2.2.3           # Lectura de Excel/CSV con la lista de perfumes
+openpyxl==3.1.5         # Motor de lectura para archivos .xlsx
+
+# --- Módulo B: Scraping / Extracción IA ---
+playwright==1.51.0      # Navegador automatizado (anti-ban vs Selenium)
+beautifulsoup4==4.13.3  # Parseo de HTML extraído por Playwright
+lxml==6.0.2             # Parser rápido para BeautifulSoup (instalar con --only-binary :all:)
+fake-useragent==2.1.0   # Rotación de User-Agent para evitar detección
+requests==2.32.3        # Descarga de imágenes del frasco
+duckduckgo_search==5.1.0 # Búsqueda de imágenes en DuckDuckGo
+openrouter==0.1.0       # Cliente de OpenRouter (modelos gratuitos con visión)
+
+# --- Módulo C: Procesador de Datos ---
+python-dotenv==1.0.1    # Variables de entorno (.env) para futuros tokens/API keys
+
+# --- Módulo D: Generador PDF ---
+fpdf2==2.8.3            # Generación de PDF con hipervínculos internos/externos
+Pillow==12.1.1          # Redimensionado y optimización de imágenes del frasco
+
+# --- Utilidades Generales ---
+loguru==0.7.3           # Logging elegante con colores y rotación de archivos
+tqdm==4.67.1            # Barra de progreso para el scraping
