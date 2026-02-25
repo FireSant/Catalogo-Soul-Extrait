@@ -14,11 +14,47 @@ Este proyecto genera catálogos de perfumería en formato PDF. Utiliza OpenRoute
 
 ## 📁 Estructura del Proyecto
 
-- `main.py` — Orquestador central: carga la lista, asigna imágenes por posición, coordina los módulos y genera el PDF.
-- `modulo_a_input.py` — Gestión de entrada y caché: lee CSV/Excel, evita reprocesar perfumes ya escrapeados.
-- `modulo_b_ia_extractor.py` — Extracción de datos con IA (OpenRouter + Meta LLaMA 3.1 8B Instruct): obtiene fichas técnicas (notas, clima, descripción) sin buscar imágenes.
-- `modulo_c_processor.py` — Traducción y lógica: traduce notas del inglés al español, determina estaciones ideales, formatea nombres.
-- `modulo_d_pdf.py` — Generador de PDF: diseño elegante con índice interactivo, botones de WhatsApp y soporte para imágenes.
+### Módulos Principales
+
+- [`main.py`](main.py:1) — Orquestador central: carga la lista, asigna imágenes por posición, coordina los módulos y genera el PDF.
+- [`modulo_a_input.py`](modulo_a_input.py:1) — Gestión de entrada y caché: lee CSV/Excel, evita reprocesar perfumes ya escrapeados.
+- [`modulo_b_ia_extractor.py`](modulo_b_ia_extractor.py:1) — Extracción de datos con IA (OpenRouter + Meta LLaMA 3.1 8B Instruct): obtiene fichas técnicas (notas, clima, descripción) sin buscar imágenes.
+- [`modulo_c_processor.py`](modulo_c_processor.py:1) — Traducción y lógica: traduce notas del inglés al español, determina estaciones ideales, formatea nombres.
+- [`modulo_d_pdf.py`](modulo_d_pdf.py:1) — Generador de PDF: diseño elegante con índice interactivo, botones de WhatsApp y soporte para imágenes.
+
+### Carpetas del Proyecto
+
+```
+soul_extrait/
+├── main.py
+├── modulo_a_input.py
+├── modulo_b_ia_extractor.py
+├── modulo_c_processor.py
+├── modulo_d_pdf.py
+├── requirements.txt
+├── .gitignore
+├── README.md
+├── CHANGELOG.md
+├── assets/
+│   └── logo.png
+├── data/
+│   ├── lista_perfumes.csv
+│   ├── cache_scrapeados.csv
+│   └── test_perfumes.csv
+├── tests/
+│   ├── conftest.py
+│   ├── check_models.py
+│   ├── test_modulo_a.py
+│   ├── test_modulo_b_imagenes.py
+│   ├── test_modulo_c.py
+│   ├── test_descarga_imagen.py
+│   └── debug/
+├── .pytest_cache/
+└── [imagenes_temp/]        # Debes crear esta carpeta manualmente
+    [output/]               # Se crea automáticamente al generar el PDF
+```
+
+**Nota:** Las carpetas `imagenes_temp/` y `output/` no existen inicialmente y deben crearse según sea necesario.
 
 ## 📸 Sistema de Imágenes (v1.4.0)
 
@@ -65,6 +101,3 @@ Este proyecto genera catálogos de perfumería en formato PDF. Utiliza OpenRoute
 - `tqdm` — Barra de progreso
 - `Pillow` — Procesamiento de imágenes
 
----
-
-*Desarrollado para Soul Extrait — 2026*
