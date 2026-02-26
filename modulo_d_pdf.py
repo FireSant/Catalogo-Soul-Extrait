@@ -158,28 +158,186 @@ class GeneradorCatalog:
         self.pdf.cell(0, 10, fecha_edicion, 0, 1, "C")
 
     def crear_indice(self, perfumes: list):
-        """Crea la pagina de indice interactivo."""
+        """Crea la pagina de indice interactivo con diseño tipográfico por colecciones."""
         self.pdf.add_page()
         # Vincular el marcador global a esta página (la del índice)
         self.pdf.set_link(self.link_indice, y=0, page=-1)
         
         self._pintar_fondo()
         self._pintar_marco()
-        self.pdf.chapter_title("Indice de Fragancias")
-        self.pdf.set_font("helvetica", "", 12)
-        self.pdf.set_text_color(*COLOR_TEXTO)
-
-        # Agrupar por marca si es posible, o simple lista
-        for i, p in enumerate(perfumes, 1):
-            nombre_label = p["nombre"]["completo"]
-            # Guardamos el link para despues
+        
+        # Título principal del índice
+        self.pdf.set_font("helvetica", "B", 24)
+        self.pdf.set_text_color(*COLOR_PRIMARIO)
+        self.pdf.cell(0, 15, "ÍNDICE DE FRAGANCIAS", 0, 1, "C")
+        
+        # Línea decorativa
+        self.pdf.set_draw_color(*COLOR_ACENTO)
+        self.pdf.set_line_width(0.8)
+        self.pdf.line(20, self.pdf.get_y(), 190, self.pdf.get_y())
+        self.pdf.ln(15)
+        
+        # Crear links para cada perfume (en orden original) para mantener compatibilidad con main.py
+        self.items_indice = []  # Resetear lista de links
+        for perfume in perfumes:
             link = self.pdf.add_link()
             self.items_indice.append(link)
+        
+        # Diccionario para lookup rápido: nombre -> link
+        links_por_nombre = {
+            perfume["nombre"]["completo"]: link
+            for perfume, link in zip(perfumes, self.items_indice)
+        }
+        
+        # Definir las 3 colecciones
+        colecciones = [
+            "Sensación de Frescura",
+            "Noche y Seducción",
+            "Fuerza y Elegancia"
+        ]
+        
+        # Agrupar perfumes por colección y género
+        perfumes_por_coleccion = {}
+        for coleccion in colecciones:
+            perfumes_por_coleccion[coleccion] = {"Hombre": [], "Mujer": [], "Unisex": []}
+        
+        for perfume in perfumes:
+            colecciones_perfume = perfume.get("colecciones", [])
+            genero = perfume.get("genero", "Unisex")
             
+            # Si no tiene colecciones asignadas, asignar a "Fuerza y Elegancia" por defecto
+            if not colecciones_perfume:
+                colecciones_perfume = ["Fuerza y Elegancia"]
+            
+            # Agregar el perfume a cada colección que corresponda
+            for coleccion in colecciones_perfume:
+                if coleccion in perfumes_por_coleccion:
+                    perfumes_por_coleccion[coleccion][genero].append(perfume)
+        
+        # Para cada colección, dibujar sección con dos columnas (Hombres | Mujeres)
+        ancho_columna = 95
+        
+        for coleccion_nombre, generos in perfumes_por_coleccion.items():
+            # Verificar si hay perfumes en esta colección
+            total_en_coleccion = sum(len(perfumes) for perfumes in generos.values())
+            if total_en_coleccion == 0:
+                continue
+            
+            # Título de la colección
+            # Verificar si hay espacio suficiente para el título + encabezados + al menos 1 fila
+            # Si no, agregar nueva página
+            espacio_necesario = 10 + 2 + 6 + 3 + 5 + 10  # título + ln + encabezados + ln + línea + ln
+            if self.pdf.get_y() + espacio_necesario > 270:  # Margen inferior (A4 = 297mm, margen ~27mm)
+                self.pdf.add_page()
+                self._pintar_fondo()
+                self._pintar_marco()
+            
+            self.pdf.set_font("helvetica", "B", 16)
             self.pdf.set_text_color(*COLOR_PRIMARIO)
-            self.pdf.cell(0, 10, f"{i}. {nombre_label}", 0, 1, "L", link=link)
-            self.pdf.set_draw_color(240)
+            self.pdf.cell(0, 10, coleccion_nombre.upper(), 0, 1, "L")
+            self.pdf.ln(2)
+            
+            # Encabezados de columnas
+            self.pdf.set_font("helvetica", "B", 11)
+            self.pdf.set_text_color(100)
+            self.pdf.cell(ancho_columna, 6, "HOMBRES", 0, 0, "L")
+            self.pdf.cell(ancho_columna, 6, "MUJERES", 0, 1, "R")
+            self.pdf.ln(3)
+            
+            # Línea sutil debajo de los encabezados
+            self.pdf.set_draw_color(220)
+            self.pdf.set_line_width(0.3)
             self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
+            self.pdf.ln(5)
+            
+            # Preparar listas
+            hombres_list = generos["Hombre"]
+            mujeres_list = generos["Mujer"]
+            max_rows = max(len(hombres_list), len(mujeres_list))
+            
+            # Dibujar filas
+            for i in range(max_rows):
+                y_start = self.pdf.get_y()
+                
+                # Verificar si hay espacio para esta fila (10mm por fila)
+                if y_start + 10 > 270:  # Si no cabe, nueva página
+                    self.pdf.add_page()
+                    self._pintar_fondo()
+                    self._pintar_marco()
+                    # Redibujar encabezados de colección en nueva página
+                    self.pdf.set_font("helvetica", "B", 16)
+                    self.pdf.set_text_color(*COLOR_PRIMARIO)
+                    self.pdf.cell(0, 10, coleccion_nombre.upper(), 0, 1, "L")
+                    self.pdf.ln(2)
+                    self.pdf.set_font("helvetica", "B", 11)
+                    self.pdf.set_text_color(100)
+                    self.pdf.cell(ancho_columna, 6, "HOMBRES", 0, 0, "L")
+                    self.pdf.cell(ancho_columna, 6, "MUJERES", 0, 1, "R")
+                    self.pdf.ln(3)
+                    self.pdf.set_draw_color(220)
+                    self.pdf.set_line_width(0.3)
+                    self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
+                    self.pdf.ln(5)
+                    y_start = self.pdf.get_y()
+                
+                # Columna izquierda - Hombres
+                if i < len(hombres_list):
+                    perfume = hombres_list[i]
+                    nombre = perfume["nombre"]["completo"]
+                    familia = perfume.get("familia_olfativa", "")
+                    link = links_por_nombre.get(nombre)
+                    
+                    # Nombre del perfume
+                    self.pdf.set_xy(10, y_start)
+                    self.pdf.set_font("helvetica", "", 10)
+                    self.pdf.set_text_color(*COLOR_PRIMARIO)
+                    self.pdf.cell(ancho_columna, 6, nombre, 0, 0, "L", link=link)
+                    
+                    # Familia olfativa debajo (en la misma columna)
+                    if familia:
+                        self.pdf.set_xy(10, y_start + 6)
+                        self.pdf.set_font("helvetica", "I", 8)
+                        self.pdf.set_text_color(120)
+                        self.pdf.cell(ancho_columna, 4, familia, 0, 1, "L")
+                    else:
+                        # Si no hay familia, movemos el cursor igualmente
+                        self.pdf.set_xy(10 + ancho_columna, y_start)
+                        self.pdf.ln(6)
+                else:
+                    self.pdf.cell(ancho_columna, 10, "", 0, 0, "L")
+                
+                # Columna derecha - Mujeres
+                if i < len(mujeres_list):
+                    perfume = mujeres_list[i]
+                    nombre = perfume["nombre"]["completo"]
+                    familia = perfume.get("familia_olfativa", "")
+                    link = links_por_nombre.get(nombre)
+                    
+                    # Nombre del perfume
+                    self.pdf.set_xy(10 + ancho_columna, y_start)
+                    self.pdf.set_font("helvetica", "", 10)
+                    self.pdf.set_text_color(*COLOR_PRIMARIO)
+                    self.pdf.cell(ancho_columna, 6, nombre, 0, 0, "R", link=link)
+                    
+                    # Familia olfativa debajo
+                    if familia:
+                        self.pdf.set_xy(10 + ancho_columna, y_start + 6)
+                        self.pdf.set_font("helvetica", "I", 8)
+                        self.pdf.set_text_color(120)
+                        self.pdf.cell(ancho_columna, 4, familia, 0, 1, "R")
+                    else:
+                        self.pdf.set_xy(10 + ancho_columna, y_start)
+                        self.pdf.ln(6)
+                else:
+                    self.pdf.cell(ancho_columna, 10, "", 0, 1, "R")
+            
+            self.pdf.ln(8)
+            
+            # Línea separadora entre colecciones
+            self.pdf.set_draw_color(230)
+            self.pdf.set_line_width(0.5)
+            self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
+            self.pdf.ln(12)
 
     def _optimizar_imagen(self, image_path: Path) -> str:
         """Redimensiona la imagen para que quepa en el PDF sin pesar demasiado."""
@@ -393,26 +551,135 @@ class GeneradorCatalog:
 # ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    # Mock de datos para probar el diseno
-    fake_data = {
-        "nombre": {"titulo": "Oud Wood", "subtitulo": "Tom Ford", "completo": "Oud Wood - Tom Ford"},
-        "ml": "100",
-        "precio": "250.000",
-        "estaciones": [
-            {"nombre": "Invierno", "icono": "❄️", "porcentaje": 80},
-            {"nombre": "Noche", "icono": "🌙", "porcentaje": 90}
-        ],
-        "notas": {
-            "salida": ["Palo de Rosa", "Cardamomo", "Pimienta China"],
-            "corazon": ["Oud", "Sandalo", "Vetiver"],
-            "fondo": ["Vainilla", "Ámbar", "Haba Tonka"]
+    # Mock de datos para probar el diseño tipográfico por colecciones
+    fake_perfumes = [
+        {
+            "nombre": {"titulo": "Bleu de Chanel", "subtitulo": "Chanel", "completo": "Bleu de Chanel - Chanel"},
+            "ml": "100",
+            "precio": "165.000",
+            "genero": "Hombre",
+            "familia_olfativa": "Cítrico - Madera",
+            "estaciones": [
+                {"nombre": "Primavera", "porcentaje": 80},
+                {"nombre": "Verano", "porcentaje": 70}
+            ],
+            "notas": {
+                "salida": ["Pomelo", "Limón", "Menta"],
+                "corazon": ["Jengibre", "Pimienta", "Iso E Super"],
+                "fondo": ["Incienso", "Sándalo", "Pachulí"]
+            },
+            "ocasiones": ["Día", "Oficina", "Casual"],
+            "descripcion_corta": "Una fragancia elegante y versátil con notas cítricas y amaderadas.",
+            "imagen_path": None
         },
-        "imagen_path": None
-    }
+        {
+            "nombre": {"titulo": "Light Blue", "subtitulo": "Dolce & Gabbana", "completo": "Light Blue - Dolce & Gabbana"},
+            "ml": "100",
+            "precio": "95.000",
+            "genero": "Mujer",
+            "familia_olfativa": "Cítrico - Floral",
+            "estaciones": [
+                {"nombre": "Verano", "porcentaje": 95},
+                {"nombre": "Primavera", "porcentaje": 85}
+            ],
+            "notas": {
+                "salida": ["Cedro", "Manzana", "Limón"],
+                "corazon": ["Jazmín", "Rosa", "Azucena"],
+                "fondo": ["Vainilla", "Musk", "Amber"]
+            },
+            "ocasiones": ["Verano", "Día", "Playa"],
+            "descripcion_corta": "Frescura mediterránea en cada nota, ideal para el verano.",
+            "imagen_path": None
+        },
+        {
+            "nombre": {"titulo": "La Nuit de L'Homme", "subtitulo": "Yves Saint Laurent", "completo": "La Nuit de L'Homme - YSL"},
+            "ml": "60",
+            "precio": "99.000",
+            "genero": "Hombre",
+            "familia_olfativa": "Especiado - Aromático",
+            "estaciones": [
+                {"nombre": "Invierno", "porcentaje": 75},
+                {"nombre": "Noche", "porcentaje": 90}
+            ],
+            "notas": {
+                "salida": ["Cardamomo", "Bergamota", "Lavanda"],
+                "corazon": ["Café", "Cedro", "Pimienta"],
+                "fondo": ["Vainilla", "Pachulí", "Musk"]
+            },
+            "ocasiones": ["Noche", "Invierno", "Cena"],
+            "descripcion_corta": "Misteriosa y seductora, perfecta para las noches de invierno.",
+            "imagen_path": None,
+            "colecciones": ["Noche y Seducción"]
+        },
+        {
+            "nombre": {"titulo": "Sauvage", "subtitulo": "Dior", "completo": "Sauvage - Dior"},
+            "ml": "100",
+            "precio": "145.000",
+            "genero": "Hombre",
+            "familia_olfativa": "Cítrico - Aromático",
+            "estaciones": [
+                {"nombre": "Verano", "porcentaje": 85},
+                {"nombre": "Primavera", "porcentaje": 80}
+            ],
+            "notas": {
+                "salida": ["Bergamota", "Pimienta"],
+                "corazon": ["Lavanda", "Pimienta", "Notas afrutadas"],
+                "fondo": ["Ambroxan", "Cedro", "Musk"]
+            },
+            "ocasiones": ["Día", "Oficina", "Verano"],
+            "descripcion_corta": "Una fragancia fresca y potente con carácter inconfundible.",
+            "imagen_path": None,
+            "colecciones": ["Sensación de Frescura", "Fuerza y Elegancia"]
+        },
+        {
+            "nombre": {"titulo": "Black Opium", "subtitulo": "Yves Saint Laurent", "completo": "Black Opium - YSL"},
+            "ml": "90",
+            "precio": "135.000",
+            "genero": "Mujer",
+            "familia_olfativa": "Oriental - Vainilla",
+            "estaciones": [
+                {"nombre": "Invierno", "porcentaje": 85},
+                {"nombre": "Noche", "porcentaje": 95}
+            ],
+            "notas": {
+                "salida": ["Pera", "Naranja", "Café"],
+                "corazon": ["Jazmín", "Rosa", "Flor de Azahar"],
+                "fondo": ["Vainilla", "Pachulí", "Musk"]
+            },
+            "ocasiones": ["Noche", "Invierno", "Romántico"],
+            "descripcion_corta": "Exótica y adictiva, una mezcla de café y vainilla irresistible.",
+            "imagen_path": None,
+            "colecciones": ["Noche y Seducción"]
+        },
+        {
+            "nombre": {"titulo": "Acqua di Gio", "subtitulo": "Giorgio Armani", "completo": "Acqua di Gio - Giorgio Armani"},
+            "ml": "100",
+            "precio": "125.000",
+            "genero": "Hombre",
+            "familia_olfativa": "Cítrico - Acuático",
+            "estaciones": [
+                {"nombre": "Verano", "porcentaje": 95},
+                {"nombre": "Primavera", "porcentaje": 85}
+            ],
+            "notas": {
+                "salida": ["Limón", "Neroli", "Jazmín de Agua"],
+                "corazon": ["Romero", "Hiedra", "Pimienta"],
+                "fondo": ["Pachulí", "Musk", "Sándalo"]
+            },
+            "ocasiones": ["Verano", "Día", "Playa"],
+            "descripcion_corta": "La esencia del mar y la frescura mediterránea.",
+            "imagen_path": None,
+            "colecciones": ["Sensación de Frescura"]
+        }
+    ]
 
     gen = GeneradorCatalog("output/test_diseno.pdf")
     gen.crear_portada()
-    gen.crear_indice([fake_data])
-    gen.agregar_perfume(fake_data, gen.items_indice[0])
+    gen.crear_indice(fake_perfumes)
+    
+    # Agregar fichas técnicas para cada perfume
+    for i, datos in enumerate(fake_perfumes):
+        gen.agregar_perfume(datos, gen.items_indice[i])
+    
     gen.guardar()
-    print("PDF de prueba creado. Revisa 'output/test_diseno.pdf'")
+    print("PDF de prueba creado con diseño tipográfico. Revisa 'output/test_diseno.pdf'")

@@ -1,5 +1,27 @@
 # Changelog - Soul Extrait
 
+## [1.5.0] - 2026-02-26
+### Added
+- **Nuevo diseño tipográfico del índice:** Índice completamente rediseñado, con layout limpio y elegante
+- **Clasificación por colecciones:** Sistema de 3 colecciones para organizar el catálogo:
+  - *Sensación de Frescura*: Perfumes cítricos, acuáticos, veraniegos
+  - *Noche y Seducción*: Perfumes amaderados, orientales, especiados, dulces
+  - *Fuerza y Elegancia*: Perfumes intensos, de alta gama, formales
+- **Layout de dos columnas:** Separación visual clara entre Hombres (izquierda) y Mujeres (derecha) en cada colección
+- **Información sutil:** Familia olfativa mostrada debajo del nombre en fuente cursiva 8pt
+- **Soporte multicategoría:** Un perfume puede aparecer en múltiples colecciones si aplica
+- **Asignación automática:** Si un perfume no tiene colecciones asignadas, se incluye en "Fuerza y Elegancia" por defecto
+
+### Changed
+- **Módulo B (`modulo_b_ia_extractor.py`):**
+  - Añadido campo `colecciones` al esquema JSON de respuesta
+  - Prompt actualizado para que la IA clasifique automáticamente en las 3 colecciones
+- **Módulo D (`modulo_d_pdf.py`):**
+  - `crear_indice()`: Reescrito completamente con nuevo diseño tipográfico
+  - Eliminados todos los emojis del índice
+  - Implementada lógica de agrupación por colección y género
+  - Mantenida compatibilidad con el sistema de links del índice original
+
 ## [1.4.0] - 2026-02-25
 ### Added
 - **Sistema de imágenes simplificado:** Asignación directa por posición desde carpeta `imagenes_temp/`

@@ -91,7 +91,8 @@ async def main():
         else:
             logger.info(f"Extrayendo datos: {nombre_perfume}...")
             marca = p.get("marca", "") or ""
-            datos_scraping = await mod_b.scrape_perfume(nombre_perfume, marca=marca)
+            genero = p.get("genero", "") or ""
+            datos_scraping = await mod_b.scrape_perfume(nombre_perfume, marca=marca, genero=genero)
             
             if datos_scraping:
                 # Guardar en caché para la próxima

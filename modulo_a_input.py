@@ -72,7 +72,7 @@ def cargar_lista(ruta_archivo: str | Path) -> pd.DataFrame:
     df = df[df["nombre"].notna() & (df["nombre"] != "")]
 
     # Columnas opcionales con valor por defecto
-    for col in ("marca", "precio", "ml"):
+    for col in ("marca", "precio", "ml", "genero"):
         if col not in df.columns:
             df[col] = ""
 
@@ -116,6 +116,7 @@ def _guardar_en_cache(resultado: dict):
     """
     notas = resultado.get("notas", {}) or {}
     ocasiones = resultado.get("ocasiones_de_uso", []) or []
+    colecciones = resultado.get("colecciones", []) or []
     nueva_fila = {
         "nombre":          resultado.get("nombre", ""),
         "url":             resultado.get("url", ""),
@@ -129,8 +130,10 @@ def _guardar_en_cache(resultado: dict):
         "clima_dia":       resultado.get("clima", {}).get("dia", 0),
         "clima_noche":     resultado.get("clima", {}).get("noche", 0),
         "genero":          resultado.get("genero", ""),
+        "familia_olfativa": resultado.get("familia_olfativa", ""),
         "descripcion":     resultado.get("descripcion_corta", ""),
         "ocasiones":       _join_notas(ocasiones),
+        "colecciones":     _join_notas(colecciones),
         "imagen_path":     str(resultado.get("imagen_path") or ""),
     }
 
@@ -164,6 +167,10 @@ def cargar_desde_cache(nombre: str) -> dict | None:
     img_val = f.get("imagen_path")
     img_path = Path(img_val) if (pd.notna(img_val) and str(img_val).strip()) else None
 
+    # Parsear colecciones (campo opcional)
+    colecciones_str = f.get("colecciones", "")
+    colecciones = colecciones_str.split("|") if (pd.notna(colecciones_str) and colecciones_str) else []
+
     return {
         "nombre":  f["nombre"],
         "url":     f.get("url", ""),
@@ -181,8 +188,10 @@ def cargar_desde_cache(nombre: str) -> dict | None:
             "noche":     int(f.get("clima_noche", 0) if pd.notna(f.get("clima_noche")) else 0),
         },
         "genero":      f.get("genero", "Unisex"),
+        "familia_olfativa": f.get("familia_olfativa", ""),
         "descripcion": f.get("descripcion", ""),
         "ocasiones":   f.get("ocasiones", "").split("|") if (pd.notna(f.get("ocasiones")) and f.get("ocasiones")) else [],
+        "colecciones": colecciones,
         "imagen_path": img_path,
         "ya_procesado": True,
     }

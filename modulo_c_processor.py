@@ -10,9 +10,88 @@ Responsabilidades:
   4. Retornar un dict limpio y listo para el Módulo D (PDF)
 """
 
+import json
 from pathlib import Path
+import math
 
 from loguru import logger
+
+# Cargar base de datos de referencia de notas reales
+REFERENCIA_NOTAS_PATH = Path("data/referencia_notas.json")
+referencia_notas_c = {}
+try:
+    if REFERENCIA_NOTAS_PATH.exists():
+        with open(REFERENCIA_NOTAS_PATH, "r", encoding="utf-8") as f:
+            referencia_notas_c = json.load(f)
+        logger.info(f"Módulo C: Cargada referencia de notas para {len(referencia_notas_c)} perfumes")
+    else:
+        logger.warning(f"Módulo C: Archivo de referencia no encontrado: {REFERENCIA_NOTAS_PATH}")
+except Exception as e:
+    logger.error(f"Módulo C: Error cargando referencia de notas: {e}")
+    referencia_notas_c = {}
+
+
+def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict) -> list:
+    """
+    Deriva las colecciones aplicando las reglas de clasificación.
+    
+    Reglas:
+    - Sensación de Frescura: Solo si es CÍTRICO y NO es dulce/gourmand
+    - Noche y Seducción: Para DULCES/GOURMAND, AMADERADOS intensos, ORIENTALES, o NOCHE/INVIERNO
+    - Fuerza y Elegancia: Para ALTA GAMA (lujo), INTENSOS, eventos FORMALES
+    
+    Retorna
+    -------
+    Lista de 1 o más colecciones (sin duplicados)
+    """
+    colecciones = set()
+    familia_lower = familia_olfativa.lower() if familia_olfativa else ""
+    
+    # Detectar si es gourmand/dulce por las notas
+    es_gourmand = False
+    notas_fondo = notas.get("fondo", [])
+    notas_dulces = ["vainilla", "caramelo", "chocolate", "café", "miel", "praliné", "tonka"]
+    for nota in notas_fondo:
+        if any(dulce in nota.lower() for dulce in notas_dulces):
+            es_gourmand = True
+            break
+    
+    # 1. Sensación de Frescura: Solo CÍTRICO (o que contenga "cítrico") y NO gourmand
+    if ("cítrico" in familia_lower or "citrico" in familia_lower) and not es_gourmand:
+        colecciones.add("Sensación de Frescura")
+    
+    # 2. Noche y Seducción: Gourmand, Amaderados intensos, Orientales, o Noche/Invierno
+    if es_gourmand:
+        colecciones.add("Noche y Seducción")
+    elif "amaderado" in familia_lower or "oriental" in familia_lower:
+        colecciones.add("Noche y Seducción")
+    
+    # 3. Fuerza y Elegancia: Por defecto para alta gama, intensos, formales
+    # Si no se asignó a las otras, o si es Unisex (suele ser más formal)
+    if not colecciones or genero == "Unisex":
+        colecciones.add("Fuerza y Elegancia")
+    
+    # Si no hay ninguna (caso extremo), asignar Fuerza y Elegancia
+    if not colecciones:
+        colecciones.add("Fuerza y Elegancia")
+    
+    return list(colecciones)
+
+
+def _normalizar_valor(valor) -> str:
+    """
+    Normaliza un valor para asegurar que sea un string válido.
+    Convierte NaN, None, y otros valores no string a string vacío.
+    """
+    if valor is None:
+        return ""
+    if isinstance(valor, float) and math.isnan(valor):
+        return ""
+    if isinstance(valor, (int, float)):
+        return str(int(valor)) if valor == int(valor) else str(valor)
+    if not isinstance(valor, str):
+        return str(valor)
+    return valor.strip()
 
 # ─────────────────────────────────────────────
 #   DICCIONARIO DE TRADUCCIÓN DE NOTAS
@@ -309,32 +388,54 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
     }
     """
     info = info_lista or {}
-    nombre_raw = resultado_scraping.get("nombre", "")
-    marca_raw  = info.get("marca", "")
+    nombre_raw = _normalizar_valor(resultado_scraping.get("nombre", ""))
+    marca_raw  = _normalizar_valor(info.get("marca", ""))
+    nombre_clave = nombre_raw.strip()
 
     nombre_fmt  = formatear_nombre(nombre_raw, marca_raw)
-    notas_trad  = traducir_notas(resultado_scraping.get("notas", {"salida": [], "corazon": [], "fondo": []}))
+    
+    # Si existe referencia, usar las notas, género y familia directamente
+    ref = referencia_notas_c.get(nombre_clave)
+    if ref:
+        logger.info(f"Módulo C: Usando datos de referencia para {nombre_clave}")
+        notas_trad = ref["notas"]
+        # Usar género y familia de la referencia para clasificación correcta
+        genero_ref = ref.get("genero", "")
+        familia_ref = ref.get("familia_olfativa", "")
+        # Si la referencia tiene datos, usarlos; si no, mantener los del scraping
+        genero = genero_ref if genero_ref else _normalizar_valor(resultado_scraping.get("genero", "Unisex"))
+        familia_olfativa = familia_ref if familia_ref else _normalizar_valor(resultado_scraping.get("familia_olfativa", ""))
+    else:
+        notas_trad  = traducir_notas(resultado_scraping.get("notas", {"salida": [], "corazon": [], "fondo": []}))
+        genero = _normalizar_valor(resultado_scraping.get("genero", "Unisex"))
+        familia_olfativa = _normalizar_valor(resultado_scraping.get("familia_olfativa", ""))
+    
     estaciones  = determinar_estaciones(resultado_scraping.get("clima", {}))
     img_path    = resultado_scraping.get("imagen_path")
 
     # Traducir descripción y ocasiones al español
-    descripcion_raw = resultado_scraping.get("descripcion", resultado_scraping.get("descripcion_corta", ""))
+    descripcion_raw = _normalizar_valor(resultado_scraping.get("descripcion", resultado_scraping.get("descripcion_corta", "")))
     descripcion_trad = traducir_texto(descripcion_raw) if descripcion_raw else ""
     
     ocasiones_raw = resultado_scraping.get("ocasiones", resultado_scraping.get("ocasiones_de_uso", []))
     ocasiones_trad = traducir_lista_ocasiones(ocasiones_raw)
-
+    
+    # Derivar colecciones automáticamente para asegurar clasificación correcta
+    colecciones_derivadas = _derivar_colecciones(familia_olfativa, genero, notas_trad)
+    
     dato_limpio = {
         "nombre":      nombre_fmt,
         "notas":       notas_trad,
-        "genero":      resultado_scraping.get("genero", "Unisex"),
+        "genero":      genero,
+        "familia_olfativa": familia_olfativa,
         "descripcion": descripcion_trad,
         "ocasiones":   ocasiones_trad,
         "estaciones":  estaciones,
         "imagen_path": Path(img_path) if img_path else None,
-        "url":         resultado_scraping.get("url", ""),
-        "precio":      info.get("precio", ""),
-        "ml":          info.get("ml", ""),
+        "url":         _normalizar_valor(resultado_scraping.get("url", "")),
+        "precio":      _normalizar_valor(info.get("precio", "")),
+        "ml":          _normalizar_valor(info.get("ml", "")),
+        "colecciones": colecciones_derivadas,
     }
 
     logger.debug(
