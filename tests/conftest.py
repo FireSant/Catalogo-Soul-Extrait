@@ -8,6 +8,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+import sys
+sys.path.insert(0, str(Path(__file__).parent))
+
 
 @pytest.fixture
 def tmp_data_dir(tmp_path):
@@ -20,10 +23,10 @@ def csv_valido(tmp_path):
     """CSV de prueba con 3 perfumes válidos."""
     ruta = tmp_path / "lista_test.csv"
     ruta.write_text(
-        "nombre,marca,precio,ml\n"
-        "Good Girl,Carolina Herrera,89990,80\n"
-        "Black Opium,Yves Saint Laurent,120000,50\n"
-        "Kirke,Tiziana Terenzi,320000,100\n",
+        "nombre,marca,ml\n"
+        "Good Girl,Carolina Herrera,80\n"
+        "Black Opium,Yves Saint Laurent,50\n"
+        "Kirke,Tiziana Terenzi,100\n",
         encoding="utf-8-sig",
     )
     return ruta
@@ -64,4 +67,36 @@ def resultado_scraping_fake():
 @pytest.fixture
 def info_lista_fake():
     """Datos de la lista del perfume (Módulo A)."""
-    return {"marca": "Carolina Herrera", "precio": "89990", "ml": "80"}
+    return {"marca": "Carolina Herrera", "ml": "80"}
+
+
+@pytest.fixture
+def datos_integracion_completos():
+    """Datos completos para test de integración A->C->D."""
+    return {
+        "nombre": "Test Perfume",
+        "url": "https://example.com/test",
+        "notas": {
+            "salida": ["bergamot", "lemon"],
+            "corazon": ["rose", "jasmine"],
+            "fondo": ["vanilla", "sandalwood"]
+        },
+        "clima": {
+            "primavera": 80, "verano": 90, "otono": 40, "invierno": 10,
+            "dia": 95, "noche": 20
+        },
+        "imagen_path": None,
+    }
+
+
+@pytest.fixture
+def lista_perfumes_simulada(tmp_path):
+    """Crea un CSV simulado y retorna la ruta y los datos esperados."""
+    ruta = tmp_path / "lista_simulada.csv"
+    ruta.write_text(
+        "nombre,marca,ml\n"
+        "Good Girl,Carolina Herrera,80\n"
+        "Black Opium,Yves Saint Laurent,50\n",
+        encoding="utf-8-sig"
+    )
+    return ruta

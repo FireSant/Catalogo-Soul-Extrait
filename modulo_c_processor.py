@@ -31,51 +31,126 @@ except Exception as e:
     referencia_notas_c = {}
 
 
-def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict) -> list:
+def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre: str = "") -> list:
     """
-    Deriva las colecciones aplicando las reglas de clasificación.
+    Deriva las colecciones aplicando el sistema de puntuación dinámico.
     
-    Reglas:
-    - Sensación de Frescura: Solo si es CÍTRICO y NO es dulce/gourmand
-    - Noche y Seducción: Para DULCES/GOURMAND, AMADERADOS intensos, ORIENTALES, o NOCHE/INVIERNO
-    - Fuerza y Elegancia: Para ALTA GAMA (lujo), INTENSOS, eventos FORMALES
+    Parámetros
+    ----------
+    familia_olfativa : str
+        Familia olfativa del perfume
+    genero : str
+        Género del perfume (Hombre, Mujer, Unisex)
+    notas : dict
+        Diccionario con notas de salida, corazón y fondo
+    nombre : str
+        Nombre del perfume (para búsqueda de palabras clave)
     
     Retorna
     -------
     Lista de 1 o más colecciones (sin duplicados)
     """
-    colecciones = set()
-    familia_lower = familia_olfativa.lower() if familia_olfativa else ""
+    # Inicializar puntuaciones para las 3 colecciones
+    puntuaciones = {
+        "Frescura y Vitalidad": 0,
+        "Noche y Seducción": 0,
+        "Elegancia e Intensidad": 0
+    }
     
-    # Detectar si es gourmand/dulce por las notas
-    es_gourmand = False
-    notas_fondo = notas.get("fondo", [])
-    notas_dulces = ["vainilla", "caramelo", "chocolate", "café", "miel", "praliné", "tonka"]
-    for nota in notas_fondo:
-        if any(dulce in nota.lower() for dulce in notas_dulces):
-            es_gourmand = True
-            break
+    # Normalizar todos los textos a minúsculas
+    familia_lower = (familia_olfativa or "").lower()
+    genero_lower = (genero or "").lower()
+    nombre_lower = (nombre or "").lower()
     
-    # 1. Sensación de Frescura: Solo CÍTRICO (o que contenga "cítrico") y NO gourmand
-    if ("cítrico" in familia_lower or "citrico" in familia_lower) and not es_gourmand:
-        colecciones.add("Sensación de Frescura")
+    # Aplanar todas las notas en una lista única y normalizar
+    todas_notas = []
+    for nivel in ["salida", "corazon", "fondo"]:
+        notas_nivel = notas.get(nivel, [])
+        if isinstance(notas_nivel, list):
+            todas_notas.extend([n.lower() if isinstance(n, str) else str(n).lower() for n in notas_nivel])
+        elif isinstance(notas_nivel, str):
+            todas_notas.append(notas_nivel.lower())
     
-    # 2. Noche y Seducción: Gourmand, Amaderados intensos, Orientales, o Noche/Invierno
-    if es_gourmand:
-        colecciones.add("Noche y Seducción")
-    elif "amaderado" in familia_lower or "oriental" in familia_lower:
-        colecciones.add("Noche y Seducción")
+    # ─────────────────────────────────────────────
+    # 1. Colección: Frescura y Vitalidad
+    # ─────────────────────────────────────────────
     
-    # 3. Fuerza y Elegancia: Por defecto para alta gama, intensos, formales
-    # Si no se asignó a las otras, o si es Unisex (suele ser más formal)
-    if not colecciones or genero == "Unisex":
-        colecciones.add("Fuerza y Elegancia")
+    # +2 puntos si la familia_olfativa contiene: cítrico, citico, acuático, marino, ozónico o verde.
+    keywords_familia_frescura = ["cítrico", "citico", "acuático", "marino", "ozónico", "verde"]
+    if any(keyword in familia_lower for keyword in keywords_familia_frescura):
+        puntuaciones["Frescura y Vitalidad"] += 2
     
-    # Si no hay ninguna (caso extremo), asignar Fuerza y Elegancia
-    if not colecciones:
-        colecciones.add("Fuerza y Elegancia")
+    # +1 punto por cada coincidencia en las notas que contenga: limón, bergamota, menta, naranja o neroli.
+    keywords_notas_frescura = ["limón", "limon", "bergamota", "menta", "naranja", "neroli"]
+    for nota in todas_notas:
+        if any(keyword in nota for keyword in keywords_notas_frescura):
+            puntuaciones["Frescura y Vitalidad"] += 1
     
-    return list(colecciones)
+    # -5 puntos (Penalización) si en cualquier campo de notas aparece: cuero, tabaco u oud.
+    keywords_penalizacion = ["cuero", "tabaco", "oud"]
+    if any(keyword in nota for nota in todas_notas for keyword in keywords_penalizacion):
+        puntuaciones["Frescura y Vitalidad"] -= 5
+    
+    # ─────────────────────────────────────────────
+    # 2. Colección: Noche y Seducción
+    # ─────────────────────────────────────────────
+    
+    # +2 puntos si la familia_olfativa contiene: oriental, ámbar, ambar, gourmand o especiado.
+    keywords_familia_noche = ["oriental", "ámbar", "ambar", "gourmand", "especiado"]
+    if any(keyword in familia_lower for keyword in keywords_familia_noche):
+        puntuaciones["Noche y Seducción"] += 2
+    
+    # +1 punto por cada coincidencia en las notas que contenga: vainilla, haba tonka, tonka, caramelo, chocolate, miel o praliné.
+    keywords_notas_noche = ["vainilla", "haba tonka", "tonka", "caramelo", "chocolate", "miel", "praliné"]
+    for nota in todas_notas:
+        if any(keyword in nota for keyword in keywords_notas_noche):
+            puntuaciones["Noche y Seducción"] += 1
+    
+    # +1 punto si el nombre del perfume contiene las palabras: intense, extreme, night, nuit o elixir.
+    keywords_nombre_noche = ["intense", "extreme", "night", "nuit", "elixir"]
+    if any(keyword in nombre_lower for keyword in keywords_nombre_noche):
+        puntuaciones["Noche y Seducción"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 3. Colección: Elegancia e Intensidad
+    # ─────────────────────────────────────────────
+    
+    # +2 puntos si la familia_olfativa contiene: amaderado, madera, chypre, cuero o fougere.
+    keywords_familia_elegancia = ["amaderado", "madera", "chypre", "cuero", "fougere"]
+    if any(keyword in familia_lower for keyword in keywords_familia_elegancia):
+        puntuaciones["Elegancia e Intensidad"] += 2
+    
+    # +1 punto por cada coincidencia en las notas que contenga: sándalo, cedro, oud, incienso, vetiver o pachulí.
+    keywords_notas_elegancia = ["sándalo", "cedro", "oud", "incienso", "vetiver", "pachulí"]
+    for nota in todas_notas:
+        if any(keyword in nota for keyword in keywords_notas_elegancia):
+            puntuaciones["Elegancia e Intensidad"] += 1
+    
+    # +2 puntos (Automático) si la columna genero es exactamente unisex.
+    if genero_lower == "unisex":
+        puntuaciones["Elegancia e Intensidad"] += 2
+    
+    # ─────────────────────────────────────────────
+    # RESOLUCIÓN Y FALLBACK
+    # ─────────────────────────────────────────────
+    
+    # Asignación: El perfume se asigna a toda colección que tenga >= 2 puntos.
+    colecciones_asignadas = [coleccion for coleccion, puntaje in puntuaciones.items() if puntaje >= 2]
+    
+    # Fallback (Garantía): Si después de sumar todo, ninguna colección llega a 2 puntos,
+    # asígnalo a la colección que tenga la puntuación más alta.
+    if not colecciones_asignadas:
+        coleccion_max = max(puntuaciones.items(), key=lambda x: x[1])[0]
+        colecciones_asignadas = [coleccion_max]
+    
+    # Empate a 0: Si todas las colecciones terminan en 0 puntos (o empatan en puntos bajos),
+    # asígnalo por defecto a "Elegancia e Intensidad".
+    # Esto se cubre automáticamente con el fallback ya que max() devolverá la primera con 0,
+    # pero para ser explícitos, si todas tienen 0, forzamos Elegancia e Intensidad.
+    if all(puntaje == 0 for puntaje in puntuaciones.values()):
+        colecciones_asignadas = ["Elegancia e Intensidad"]
+    
+    return list(set(colecciones_asignadas))  # Eliminar duplicados por si acaso
 
 
 def _normalizar_valor(valor) -> str:
@@ -92,6 +167,7 @@ def _normalizar_valor(valor) -> str:
     if not isinstance(valor, str):
         return str(valor)
     return valor.strip()
+
 
 # ─────────────────────────────────────────────
 #   DICCIONARIO DE TRADUCCIÓN DE NOTAS
@@ -161,10 +237,11 @@ NOTAS_TRADUCCION: dict[str, str] = {
 def traducir_nota(nota: str) -> str:
     """
     Traduce una nota olfativa del inglés al español.
-    Si no tiene traducción, retorna la nota original capitalizada.
+    Si no tiene traducción, retorna la nota original en minúsculas
+    (conservando la nota exacta de la IA sin filtrar).
     """
     nota_lower = nota.strip().lower()
-    return NOTAS_TRADUCCION.get(nota_lower, nota.strip().title())
+    return NOTAS_TRADUCCION.get(nota_lower, nota_lower)
 
 
 def traducir_texto(texto: str) -> str:
@@ -373,7 +450,7 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
     resultado_scraping : dict
         Salida de modulo_b_ia_extractor.scrape_perfume()
     info_lista : dict | None
-        Datos extra del CSV (precio, ml, marca) del Módulo A
+        Datos extra del CSV (ml, marca) del Módulo A
 
     Retorna
     -------
@@ -383,7 +460,6 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
         "estaciones":  list  (dominantes con icono y %),
         "imagen_path": Path | None,
         "url":         str,
-        "precio":      str,
         "ml":          str,
     }
     """
@@ -407,7 +483,12 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
         familia_olfativa = familia_ref if familia_ref else _normalizar_valor(resultado_scraping.get("familia_olfativa", ""))
     else:
         notas_trad  = traducir_notas(resultado_scraping.get("notas", {"salida": [], "corazon": [], "fondo": []}))
-        genero = _normalizar_valor(resultado_scraping.get("genero", "Unisex"))
+        # PRIORIZAR género del CSV (info_lista) sobre el scraping, si existe
+        genero_csv = info.get("genero", "")
+        if genero_csv and genero_csv.strip():
+            genero = _normalizar_valor(genero_csv)
+        else:
+            genero = _normalizar_valor(resultado_scraping.get("genero", "Unisex"))
         familia_olfativa = _normalizar_valor(resultado_scraping.get("familia_olfativa", ""))
     
     estaciones  = determinar_estaciones(resultado_scraping.get("clima", {}))
@@ -421,19 +502,21 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
     ocasiones_trad = traducir_lista_ocasiones(ocasiones_raw)
     
     # Derivar colecciones automáticamente para asegurar clasificación correcta
-    colecciones_derivadas = _derivar_colecciones(familia_olfativa, genero, notas_trad)
+    colecciones_derivadas = _derivar_colecciones(familia_olfativa, genero, notas_trad, nombre_raw)
+    
+    # Normalizar género para consistencia (capitalizar primera letra)
+    genero_norm = genero.capitalize() if genero else "Unisex"
     
     dato_limpio = {
         "nombre":      nombre_fmt,
         "notas":       notas_trad,
-        "genero":      genero,
+        "genero":      genero_norm,
         "familia_olfativa": familia_olfativa,
         "descripcion": descripcion_trad,
         "ocasiones":   ocasiones_trad,
         "estaciones":  estaciones,
         "imagen_path": Path(img_path) if img_path else None,
         "url":         _normalizar_valor(resultado_scraping.get("url", "")),
-        "precio":      _normalizar_valor(info.get("precio", "")),
         "ml":          _normalizar_valor(info.get("ml", "")),
         "colecciones": colecciones_derivadas,
     }
@@ -468,7 +551,7 @@ if __name__ == "__main__":
         "imagen_path": None,
     }
 
-    fake_info = {"marca": "Carolina Herrera", "precio": "89990", "ml": "80"}
+    fake_info = {"marca": "Carolina Herrera", "ml": "80"}
 
     resultado = procesar(fake_scraping, fake_info)
 

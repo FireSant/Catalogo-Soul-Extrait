@@ -23,9 +23,10 @@ class TestTraduccion:
         assert mod_c.traducir_nota("VANILLA") == "Vainilla"
         assert mod_c.traducir_nota("Sandalwood") == "Sándalo"
 
-    def test_nota_desconocida_devuelve_original_capitalizada(self):
+    def test_nota_desconocida_devuelve_original_minuscula(self):
+        """Notas no conocidas se conservan en minúsculas (sin filtrar)."""
         resultado = mod_c.traducir_nota("abcxyz_desconocido")
-        assert resultado == "Abcxyz_Desconocido"
+        assert resultado == "abcxyz_desconocido"
 
     def test_nota_con_espacios_limpios(self):
         assert mod_c.traducir_nota("  musk  ") == "Almizcle"
@@ -148,7 +149,7 @@ class TestFormateoNombre:
 class TestProcesar:
     def test_retorna_dict_con_claves_correctas(self, resultado_scraping_fake, info_lista_fake):
         resultado = mod_c.procesar(resultado_scraping_fake, info_lista_fake)
-        for clave in ("nombre", "notas", "estaciones", "imagen_path", "url", "precio", "ml"):
+        for clave in ("nombre", "notas", "estaciones", "imagen_path", "url", "ml"):
             assert clave in resultado
 
     def test_notas_traducidas_en_resultado_final(self, resultado_scraping_fake, info_lista_fake):
@@ -157,15 +158,13 @@ class TestProcesar:
         assert "Rosa" in resultado["notas"]["corazon"]
         assert "Sándalo" in resultado["notas"]["fondo"]
 
-    def test_precio_y_ml_incluidos(self, resultado_scraping_fake, info_lista_fake):
+    def test_ml_incluido(self, resultado_scraping_fake, info_lista_fake):
         resultado = mod_c.procesar(resultado_scraping_fake, info_lista_fake)
-        assert resultado["precio"] == "89990"
         assert resultado["ml"] == "80"
 
     def test_sin_info_lista_no_rompe(self, resultado_scraping_fake):
         """Sin info_lista el proceso debe completarse igualmente."""
         resultado = mod_c.procesar(resultado_scraping_fake)
-        assert resultado["precio"] == ""
         assert resultado["ml"] == ""
 
     def test_imagen_path_none_si_no_hay_imagen(self, resultado_scraping_fake, info_lista_fake):

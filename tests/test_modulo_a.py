@@ -28,7 +28,7 @@ class TestCargarLista:
     def test_columnas_opcionales_creadas(self, csv_valido):
         """Si faltan columnas opcionales, deben agregarse vacías."""
         df = mod_a.cargar_lista(csv_valido)
-        for col in ("marca", "precio", "ml"):
+        for col in ("marca", "ml"):
             assert col in df.columns
 
     def test_columna_nombre_obligatoria(self, csv_sin_columna_nombre):

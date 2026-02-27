@@ -22,6 +22,10 @@
   - Implementada lógica de agrupación por colección y género
   - Mantenida compatibilidad con el sistema de links del índice original
 
+### Fixed
+- **Clasificación automática de colecciones:** Corregido bug en `modulo_c_processor.py` donde no se usaban `familia_olfativa` y `genero` de la referencia, causando clasificaciones incorrectas
+- **Páginas vacías en índice PDF:** Implementado manejo manual de saltos de página en `modulo_d_pdf.py` para evitar páginas en blanco y asegurar que los encabezados de colección se redibujen en cada nueva página
+
 ## [1.4.0] - 2026-02-25
 ### Added
 - **Sistema de imágenes simplificado:** Asignación directa por posición desde carpeta `imagenes_temp/`

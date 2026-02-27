@@ -115,7 +115,7 @@ async def main():
             datos_scraping["imagen_path"] = img_path
         
         # 6. Procesar datos (Módulo C)
-        # Enriquecemos con los datos extra del input (precio, ml, marca)
+        # Enriquecemos con los datos extra del input (ml, marca)
         datos_limpios = mod_c.procesar(datos_scraping, p)
         resultados_finales.append(datos_limpios)
 

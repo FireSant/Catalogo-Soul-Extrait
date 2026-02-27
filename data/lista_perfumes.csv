@@ -1,21 +1,61 @@
-nombre,marca,precio,ml,genero
-Bleu de Chanel,Chanel,165000,100,Hombre
-Light Blue,Dolce & Gabbana,95000,100,Mujer
-Acqua di Gio,Giorgio Armani,125000,100,Hombre
-La Nuit de L'Homme,Yves Saint Laurent,99000,60,Hombre
-Sauvage,Dior,145000,100,Hombre
-Erba Pura,Xeroff,50000,30,Unisex
-Terre d'Hermès,Hermès,180000,100,Hombre
-Spicebomb,Viktor&Rolf,120000,100,Hombre
-Black Opium,Yves Saint Laurent,135000,90,Mujer
-Good Girl,Carolina Herrera,110000,80,Mujer
-Aventus,Creed,450000,100,Hombre
-Oud Wood,Tom Ford,280000,100,Hombre
-Shalimar,Guerlain,150000,90,Mujer
-L'Homme,Yves Saint Laurent,85000,100,Hombre
-Narciso Rodriguez,Narciso Rodriguez,130000,100,Unisex
-CK One,CK,60000,100,Unisex
-Bvlgari Man,Bvlgari,110000,100,Hombre
-Le Male,Jean Paul Gaultier,90000,125,Hombre
-Angel,Mugler,140000,100,Mujer
-Daisy,Marc Jacobs,70000,50,Mujer
+﻿nombre,marca,ml,genero
+Sauvage,Dior,30,hombre
+Bleu de Chanel,Chanel,30,hombre
+Acqua di Gio,Armani,30,hombre
+1 Million,Paco Rabanne,30,hombre
+Invictus,Paco Rabanne,30,hombre
+Eros,Versace,30,hombre
+212 VIP Men,Carolina Herrera,30,hombre
+Bad Boy,Carolina Herrera,30,hombre
+Le Male,Jean Paul Gaultier,30,hombre
+Ultra Male,Jean Paul Gaultier,30,hombre
+Stronger With You,Armani,30,hombre
+Boss Bottled,Hugo Boss,30,hombre
+Light Blue Pour Homme,Dolce & Gabbana,30,hombre
+Dylan Blue,Versace,30,hombre
+Explorer,Montblanc,30,hombre
+Legend,Montblanc,30,hombre
+Polo Blue,Ralph Lauren,30,hombre
+Terre d'Hermes,Hermes,30,hombre
+Fahrenheit,Dior,30,hombre
+Y,YSL,30,hombre
+Club de Nuit Intense Man,Armaf,30,hombre
+9PM,Afnan,30,hombre
+Hawas,Rasasi,30,hombre
+Asad,Lattafa,30,hombre
+Khamrah,Lattafa,30,unisex
+Toy Boy,Moschino,30,hombre
+Phantom,Paco Rabanne,30,hombre
+Valentino Uomo Born In Roma,Valentino,30,hombre
+Hacivat,Nishane,30,unisex
+Aventus,Creed,30,hombre
+Good Girl,Carolina Herrera,30,mujer
+La Vie Est Belle,Lancome,30,mujer
+Black Opium,YSL,30,mujer
+Libre,YSL,30,mujer
+Cloud,Ariana Grande,30,mujer
+Sweet Like Candy,Ariana Grande,30,mujer
+Thank U Next,Ariana Grande,30,mujer
+Ari,Ariana Grande,30,mujer
+212 VIP Rose,Carolina Herrera,30,mujer
+J'adore,Dior,30,mujer
+Miss Dior,Dior,30,mujer
+Chanel No 5,Chanel,30,mujer
+Coco Mademoiselle,Chanel,30,mujer
+Light Blue,Dolce & Gabbana,30,mujer
+Bright Crystal,Versace,30,mujer
+Scandal,Jean Paul Gaultier,30,mujer
+Lady Million,Paco Rabanne,30,mujer
+Olympea,Paco Rabanne,30,mujer
+Idole,Lancome,30,mujer
+Si,Armani,30,mujer
+My Way,Armani,30,mujer
+Can Can,Paris Hilton,30,mujer
+Fantasy,Britney Spears,30,mujer
+Yara,Lattafa,30,mujer
+Baccarat Rouge 540,MFK,30,unisex
+Santal 33,Le Labo,30,unisex
+Tobacco Vanille,Tom Ford,30,unisex
+Lost Cherry,Tom Ford,30,unisex
+Ombre Nomade,Louis Vuitton,30,unisex
+CK One,Calvin Klein,30,unisex

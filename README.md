@@ -6,7 +6,7 @@ Este proyecto genera catálogos de perfumería en formato PDF. Utiliza OpenRoute
 
 1. **Prepara tus imágenes:** Coloca todas las imágenes de perfumes en la carpeta `imagenes_temp/`. El sistema asignará la primera imagen al primer perfume de la lista, la segunda al segundo, y así sucesivamente (orden alfabético).
 
-2. **Prepara tu lista:** Coloca tu lista de perfumes en `data/lista_perfumes.csv` con columnas: `nombre`, `marca` (opcional), `precio` (opcional), `ml` (opcional).
+2. **Prepara tu lista:** Coloca tu lista de perfumes en `data/lista_perfumes.csv` con columnas: `nombre`, `marca` (opcional), `ml` (opcional).
 
 3. **Ejecuta:** `python main.py`
 

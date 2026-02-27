@@ -10,7 +10,6 @@ Responsabilidades:
 Columnas esperadas en el archivo de entrada:
   - "nombre"  (obligatorio): ej. "Good Girl Carolina Herrera"
   - "marca"   (opcional): ej. "Carolina Herrera"
-  - "precio"  (opcional): ej. "89.990"
   - "ml"      (opcional): ej. "80"
 """
 
@@ -72,7 +71,7 @@ def cargar_lista(ruta_archivo: str | Path) -> pd.DataFrame:
     df = df[df["nombre"].notna() & (df["nombre"] != "")]
 
     # Columnas opcionales con valor por defecto
-    for col in ("marca", "precio", "ml", "genero"):
+    for col in ("marca", "ml", "genero"):
         if col not in df.columns:
             df[col] = ""
 
@@ -210,7 +209,7 @@ def obtener_perfumes_pendientes(df: pd.DataFrame) -> list[dict]:
     Retorna
     -------
     pendientes : list[dict]
-        Lista de dicts con claves: nombre, marca, precio, ml, estado
+        Lista de dicts con claves: nombre, marca, ml, estado
         estado puede ser 'pendiente' o 'en_cache'
     """
     cache = _cargar_cache()
@@ -222,8 +221,8 @@ def obtener_perfumes_pendientes(df: pd.DataFrame) -> list[dict]:
         info = {
             "nombre": nombre,
             "marca":  fila.get("marca", ""),
-            "precio": fila.get("precio", ""),
             "ml":     fila.get("ml", ""),
+            "genero": fila.get("genero", ""),
         }
 
         if nombre.strip().lower() in cache:
@@ -254,7 +253,7 @@ if __name__ == "__main__":
     else:
         ruta = archivos[0]
         df = cargar_lista(ruta)
-        print(df[["nombre", "marca", "precio", "ml"]].to_string(index=True))
+        print(df[["nombre", "marca", "ml"]].to_string(index=True))
 
         perfumes = obtener_perfumes_pendientes(df)
         pendientes = [p for p in perfumes if p["estado"] == "pendiente"]
