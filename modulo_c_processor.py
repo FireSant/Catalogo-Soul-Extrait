@@ -348,10 +348,212 @@ def traducir_lista_ocasiones(ocasiones: list) -> list:
 
 
 # ─────────────────────────────────────────────
+#   INFERENCIA DE OCASIONES (BASADA EN NOTAS Y DESCRIPCIÓN)
+# ─────────────────────────────────────────────
+
+def inferir_ocasiones(notas: dict, descripcion: str = "", familia_olfativa: str = "", genero: str = "") -> list:
+    """
+    Infiere 2-3 ocasiones de uso basándose en las notas, descripción y familia olfativa.
+    Usa conocimiento de perfumería para hacer recomendaciones inteligentes.
+    
+    Parámetros
+    ----------
+    notas : dict
+        {"salida": [...], "corazon": [...], "fondo": [...]}
+    descripcion : str
+        Descripción del perfume (puede contener pistas sobre el contexto de uso)
+    familia_olfativa : str
+        Familia olfativa del perfume
+    genero : str
+        Género (Hombre, Mujer, Unisex)
+    
+    Retorna
+    -------
+    Lista de 2-3 ocasiones en español: ["Citas", "Oficina", "Fin de semana"]
+    """
+    # Aplanar todas las notas
+    todas_notas = []
+    for nivel in ["salida", "corazon", "fondo"]:
+        notas_nivel = notas.get(nivel, [])
+        if isinstance(notas_nivel, list):
+            todas_notas.extend([n.lower() if isinstance(n, str) else str(n).lower() for n in notas_nivel])
+        elif isinstance(notas_nivel, str):
+            todas_notas.append(notas_nivel.lower())
+    
+    # Normalizar textos
+    descripcion_lower = (descripcion or "").lower()
+    familia_lower = (familia_olfativa or "").lower()
+    genero_lower = (genero or "").lower()
+    
+    # Sistema de puntuación por ocasión
+    puntuaciones = {
+        "Citas": 0,
+        "Oficina": 0,
+        "Gimnasio": 0,
+        "Evento Formal": 0,
+        "Fin de Semana": 0,
+        "Playa": 0,
+        "Invierno": 0,
+        "Noche": 0,
+    }
+    
+    # ─────────────────────────────────────────────
+    # 1. Citas Románticas
+    # ─────────────────────────────────────────────
+    # Notas dulces, gourmand, florales intensos, vainilla, chocolate
+    keywords_citas = [
+        "vainilla", "chocolate", "miel", "caramelo", "praliné", "haba tonka", "tonka",
+        "rosa", "jazmín", "tuberosa", "gardenia", "ylang-ylang",  # florales intensos
+        "ámbar", "musk", "almizcle", "oriental", "gourmand",
+        "noche", "romántico", "seductor", "cita", "romance"
+    ]
+    for keyword in keywords_citas:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Citas"] += 2
+        if keyword in descripcion_lower:
+            puntuaciones["Citas"] += 1
+    if "floral" in familia_lower and "mujer" in genero_lower:
+        puntuaciones["Citas"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 2. Oficina/Negocios
+    # ─────────────────────────────────────────────
+    # Aromáticos cítricos, fougère, notas limpias, proyección moderada
+    keywords_oficina = [
+        "bergamota", "limón", "naranja", "mandarina", "pimienta",  # cítricos/aromáticos
+        "lavanda", "romero", "salvia", "mint", "menta",  # hierbas frescas
+        "cedro", "sándalo",  # amaderados limpios
+        "fougère", "aromático", "fresh", "clean", "profesional", "oficina", "negocios"
+    ]
+    for keyword in keywords_oficina:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Oficina"] += 2
+        if keyword in descripcion_lower:
+            puntuaciones["Oficina"] += 1
+    if "aromático" in familia_lower or "fougère" in familia_lower:
+        puntuaciones["Oficina"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 3. Gimnasio/Deporte
+    # ─────────────────────────────────────────────
+    # Frescos acuáticos, cítricos, alta vitalidad
+    keywords_gimnasio = [
+        "acuático", "marine", "sea salt", "agua", "ducharse", "deporte",
+        "menta", "pepino", "green tea", "té verde", "limón", "bergamota",
+        "fresco", "energético", "deportivo", "activo"
+    ]
+    for keyword in keywords_gimnasio:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Gimnasio"] += 2
+        if keyword in descripcion_lower:
+            puntuaciones["Gimnasio"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 4. Evento Formal
+    # ─────────────────────────────────────────────
+    # Amaderados intensos, orientales, cuero, proyección fuerte
+    keywords_formal = [
+        "cuero", "tabaco", "oud", "incienso", "benzoin", "mirra",
+        "ámbar", "oriental", "chypre", "amaderado intenso",
+        "formal", "elegancia", "gala", "evento", "ceremonia", "traje"
+    ]
+    for keyword in keywords_formal:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Evento Formal"] += 2
+        if keyword in descripcion_lower:
+            puntuaciones["Evento Formal"] += 1
+    if "oriental" in familia_lower or "chypre" in familia_lower:
+        puntuaciones["Evento Formal"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 5. Fin de Semana/Casual
+    # ─────────────────────────────────────────────
+    # Versátiles, frescos, gourmand ligeros
+    keywords_casual = [
+        "casual", "relajado", "fin de semana", "weekend", "diario",
+        "manzana", "pera", "melocotón", "frutal", "verano",
+        "versátil", "todo el día", "everyday"
+    ]
+    for keyword in keywords_casual:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Fin de Semana"] += 1
+        if keyword in descripcion_lower:
+            puntuaciones["Fin de Semana"] += 2
+    if "fruity" in familia_lower or "fresh" in familia_lower:
+        puntuaciones["Fin de Semana"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 6. Playa/Verano
+    # ─────────────────────────────────────────────
+    # Acuáticos, cítricos, sal marina, calor extremo
+    keywords_playa = [
+        "acuático", "marine", "sea salt", "oceano", "playa", "verano",
+        "limón", "bergamota", "naranja", "mandarina", "cítrico",
+        "tropical", "sol", "calor", "refrescante"
+    ]
+    for keyword in keywords_playa:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Playa"] += 2
+        if keyword in descripcion_lower:
+            puntuaciones["Playa"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 7. Invierno (estación fría)
+    # ─────────────────────────────────────────────
+    # Gourmand, amaderados pesados, especias fuertes
+    keywords_invierno = [
+        "vainilla", "caramelo", "chocolate", "miel", "haba tonka",
+        "tabaco", "cuero", "oud", "incienso", "sándalo", "cedro",
+        "especiado", "canela", "clavo", "nuez moscada", "jengibre",
+        "invierno", "frío", "abrigo", "navidad"
+    ]
+    for keyword in keywords_invierno:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Invierno"] += 2
+        if keyword in descripcion_lower:
+            puntuaciones["Invierno"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 8. Noche
+    # ─────────────────────────────────────────────
+    # Orientales, gourmand, proyección fuerte, misterio
+    keywords_noche = [
+        "oriental", "gourmand", "ámbar", "vainilla", "musk",
+        "noche", "night", "nocturno", "evening", "tarde", "oscuro",
+        "intenso", "deep", "seductor", "misterioso"
+    ]
+    for keyword in keywords_noche:
+        if any(keyword in nota for nota in todas_notas):
+            puntuaciones["Noche"] += 2
+        if keyword in descripcion_lower:
+            puntuaciones["Noche"] += 1
+    
+    # ─────────────────────────────────────────────
+    # SELECCIÓN FINAL
+    # ─────────────────────────────────────────────
+    # Ordenar por puntuación descendente
+    ocasiones_ordenadas = sorted(puntuaciones.items(), key=lambda x: x[1], reverse=True)
+    
+    # Tomar las 2 o 3 con mayor puntuación (si tienen al menos 2 puntos)
+    resultado = []
+    for ocasion, puntaje in ocasiones_ordenadas:
+        if puntaje >= 2 and len(resultado) < 3:
+            resultado.append(ocasion)
+    
+    # Fallback: si ninguna tiene 2 puntos, tomar las 2 con más puntaje
+    if not resultado and ocasiones_ordenadas:
+        resultado = [ocasiones_ordenadas[0][0]]
+        if len(ocasiones_ordenadas) > 1 and ocasiones_ordenadas[1][1] > 0:
+            resultado.append(ocasiones_ordenadas[1][0])
+    
+    return resultado
+
+
+# ─────────────────────────────────────────────
 #   LÓGICA DE NEGOCIO: ICONOS DE ESTACIÓN
 # ─────────────────────────────────────────────
 
-UMBRAL_DOMINANTE = 40  # % mínimo para considerar una estación dominante
+UMBRAL_DOMINANTE = 20  # % mínimo para considerar una estación dominante (bajado de 40 a 20)
 
 ICONOS_ESTACION = {
     "verano":    "☀️",
@@ -371,15 +573,71 @@ NOMBRES_ESTACION = {
     "noche":     "Noche",
 }
 
+# Bonificaciones por notas para ajuste de estaciones (conocimiento de perfumería)
+BONIFICACIONES_NOTAS = {
+    "verano": {
+        "bergamota", "limón", "naranja", "mandarina", "lime", "yuzu",  # cítricos
+        "menta", "pepino", "green tea", "té verde",  # frescos
+        "sea salt", "marine", "acuático", "agua",  # acuáticos
+        "albahaca", "hierbabuena", "lavanda",  # hierbas frescas
+    },
+    "primavera": {
+        "bergamota", "limón", "naranja", "mandarina",  # cítricos
+        "rosa", "jazmín", "lirio", "peonía", "magnolia",  # florales ligeros
+        "manzana", "pera", "frambuesa",  # frutales frescos
+        "hiedra", "musgo", "verde",  # notas verdes
+    },
+    "otono": {
+        "canela", "cardamomo", "pimienta", "jengibre",  # especias
+        "sándalo", "cedro", "vetiver",  # amaderados secos
+        "tabaco", "cuero", "oud",  # notas intensas
+        "hoja seca", "maderas", "tierra",  # notas terrosas
+    },
+    "invierno": {
+        "vainilla", "haba tonka", "tonka", "caramelo", "chocolate", "miel",  # gourmand
+        "ámbar", "almizcle", "musk",  # notas cálidas
+        "sándalo", "cedro", "incienso", "benzoin",  # amaderados/ resinados
+        "especiado", "clavo", "nuez moscada",  # especias fuertes
+    },
+}
 
-def determinar_estaciones(clima: dict) -> list[dict]:
+def _calcular_ajuste_estacional_por_notas(notas: dict) -> dict:
+    """
+    Calcula bonificaciones de porcentaje para estaciones basadas en las notas del perfume.
+    Aplica conocimiento de perfumería: ciertas notas son indicadoras de estaciones.
+    
+    Retorna un diccionario con ajustes: {"verano": 15, "invierno": 10, ...}
+    """
+    # Aplanar todas las notas
+    todas_notas = []
+    for nivel in ["salida", "corazon", "fondo"]:
+        notas_nivel = notas.get(nivel, [])
+        if isinstance(notas_nivel, list):
+            todas_notas.extend([n.lower() if isinstance(n, str) else str(n).lower() for n in notas_nivel])
+        elif isinstance(notas_nivel, str):
+            todas_notas.append(notas_nivel.lower())
+    
+    ajustes = {"verano": 0, "primavera": 0, "otono": 0, "invierno": 0}
+    
+    for nota in todas_notas:
+        for estacion, keywords in BONIFICACIONES_NOTAS.items():
+            if any(keyword in nota for keyword in keywords):
+                # Bonificación: +15 puntos por nota coincidente
+                ajustes[estacion] += 15
+    
+    return ajustes
+
+
+def determinar_estaciones(clima: dict, notas: dict = None) -> list[dict]:
     """
     Determina las estaciones y momentos del día dominantes.
-
-    Lógica:
-    - Si ninguna estación supera el umbral, se toma la de mayor porcentaje.
-    - Si hay empate, se incluyen ambas.
-
+    
+    Incorpora lógica mejorada:
+    1. Usa los porcentajes de la IA como base
+    2. Aplica bonificaciones basadas en notas olfativas (conocimiento de perfumería)
+    3. Umbral reducido al 20% para mayor sensibilidad
+    4. Si ninguna supera el umbral, toma las 2 con mayor porcentaje
+    
     Retorna
     -------
     Lista de dicts: [{"nombre": "Verano", "icono": "☀️", "porcentaje": 65}, ...]
@@ -387,6 +645,12 @@ def determinar_estaciones(clima: dict) -> list[dict]:
     """
     estaciones = {k: v for k, v in clima.items() if k in ("verano", "primavera", "otono", "invierno")}
     momentos   = {k: v for k, v in clima.items() if k in ("dia", "noche")}
+    
+    # Aplicar bonificaciones por notas si están disponibles
+    if notas:
+        ajustes = _calcular_ajuste_estacional_por_notas(notas)
+        for estacion in estaciones:
+            estaciones[estacion] = min(100, estaciones[estacion] + ajustes.get(estacion, 0))
 
     resultado = []
 
@@ -394,12 +658,23 @@ def determinar_estaciones(clima: dict) -> list[dict]:
         if not any(grupo.values()):
             return  # Sin datos
 
-        max_val = max(grupo.values())
-        dominantes = [k for k, v in grupo.items() if v >= UMBRAL_DOMINANTE]
-
-        if not dominantes:
-            dominantes = [k for k, v in grupo.items() if v == max_val]
-
+        # Ordenar de mayor a menor
+        items_ordenados = sorted(grupo.items(), key=lambda x: x[1], reverse=True)
+        
+        # Tomar las 2 estaciones con mayor porcentaje (si superan el umbral o son las máximas)
+        dominantes = []
+        for key, valor in items_ordenados:
+            if valor >= UMBRAL_DOMINANTE:
+                dominantes.append(key)
+            # Si no hay ninguna con umbral, tomar las 2 primeras
+            if not dominantes and len(dominantes) < 2 and valor > 0:
+                dominantes.append(key)
+                if len(dominantes) >= 2:
+                    break
+        
+        # Limitar a máximo 2 estaciones/momentos
+        dominantes = dominantes[:2]
+        
         for key in dominantes:
             resultado.append({
                 "nombre":     NOMBRES_ESTACION[key],
@@ -491,15 +766,32 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
             genero = _normalizar_valor(resultado_scraping.get("genero", "Unisex"))
         familia_olfativa = _normalizar_valor(resultado_scraping.get("familia_olfativa", ""))
     
-    estaciones  = determinar_estaciones(resultado_scraping.get("clima", {}))
+    # Determinar estaciones con bonificaciones por notas
+    estaciones  = determinar_estaciones(resultado_scraping.get("clima", {}), notas_trad)
     img_path    = resultado_scraping.get("imagen_path")
 
-    # Traducir descripción y ocasiones al español
+    # Traducir descripción al español
     descripcion_raw = _normalizar_valor(resultado_scraping.get("descripcion", resultado_scraping.get("descripcion_corta", "")))
     descripcion_trad = traducir_texto(descripcion_raw) if descripcion_raw else ""
     
+    # Inferir ocasiones basadas en notas, descripción, familia y género (sistema inteligente)
+    # Si la IA proporcionó ocasiones, las usamos como base; si no, inferimos desde cero
     ocasiones_raw = resultado_scraping.get("ocasiones", resultado_scraping.get("ocasiones_de_uso", []))
-    ocasiones_trad = traducir_lista_ocasiones(ocasiones_raw)
+    if ocasiones_raw:
+        # Traducir ocasiones de la IA
+        ocasiones_trad = traducir_lista_ocasiones(ocasiones_raw)
+        # Complementar con inferencia si hay menos de 2
+        if len(ocasiones_trad) < 2:
+            ocasiones_inferidas = inferir_ocasiones(notas_trad, descripcion_trad, familia_olfativa, genero)
+            # Añadir ocasiones inferidas que no estén ya presentes
+            for oc in ocasiones_inferidas:
+                if oc not in ocasiones_trad:
+                    ocasiones_trad.append(oc)
+            # Limitar a máximo 3
+            ocasiones_trad = ocasiones_trad[:3]
+    else:
+        # No hay ocasiones de la IA, inferir completamente
+        ocasiones_trad = inferir_ocasiones(notas_trad, descripcion_trad, familia_olfativa, genero)
     
     # Derivar colecciones automáticamente para asegurar clasificación correcta
     colecciones_derivadas = _derivar_colecciones(familia_olfativa, genero, notas_trad, nombre_raw)

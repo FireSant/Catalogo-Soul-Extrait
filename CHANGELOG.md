@@ -1,5 +1,99 @@
 # Changelog - Soul Extrait
 
+## [1.7.0] - 2026-02-27
+### Added
+- **Sistema de estaciones mejorado:** Umbral reducido de 40% a 20% para mayor sensibilidad
+- **Bonificaciones por notas:** Algoritmo de conocimiento de perfumería que ajusta porcentajes de estaciones basándose en las notas olfativas:
+  - Notas cítricas/verdes → +15% a Primavera/Verano
+  - Notas acuáticas → +15% a Verano
+  - Notas especiadas/amaderadas → +15% a Otoño/Invierno
+  - Notas gourmand/cálidas → +15% a Invierno
+- **Inferencia inteligente de ocasiones:** Nueva función `inferir_ocasiones()` que analiza notas, descripción, familia olfativa y género para recomendar 2-3 contextos de uso:
+  - Citas románticas (dulces, gourmand, florales intensos)
+  - Oficina/Negocios (cítricos, fougère, notas limpias)
+  - Gimnasio/Deporte (frescos, acuáticos, deportivos)
+  - Evento Formal (amaderados intensos, orientales, cuero)
+  - Fin de Semana/Casual (versátiles, frutales, frescos)
+  - Playa/Verano (acuáticos, cítricos, sal marina)
+  - Invierno (gourmand, amaderados pesados)
+  - Noche (orientales, gourmand, proyección fuerte)
+- **Lógica híbrida de ocasiones:** Si la IA proporciona ocasiones, se complementan con inferencia; si no, se infieren completamente desde cero
+
+### Changed
+- **Módulo C (`modulo_c_processor.py`):**
+  - `determinar_estaciones()`: Ahora recibe parámetro `notas` para aplicar bonificaciones
+  - `_calcular_ajuste_estacional_por_notas()`: Nueva función que calcula bonificaciones basadas en keywords de notas
+  - `inferir_ocasiones()`: Nueva función principal para inferir contextos de uso
+  - `procesar()`: Integra la nueva lógica de estaciones y ocasiones
+  - Límite máximo de 2 estaciones/momentos y 3 ocasiones para presentación concisa
+
+### Fixed
+- **Estaciones poco discriminativas:** El umbral del 40% era demasiado alto, ahora 20% permite mayor variación
+- **Ocasiones genéricas:** Sistema anterior solo traducía de la IA, ahora genera recomendaciones inteligentes basadas en características del perfume
+
+## [1.6.0] - 2026-02-27
+### Added
+- **Sistema de Base de Datos de Referencia:** Base de datos JSON (`data/referencia_notas.json`) con notas reales de más de 100 perfumes populares para garantizar precisión
+- **Derivación automática de colecciones:** Algoritmo de puntuación dinámica en `modulo_c_processor.py` que clasifica automáticamente los perfumes en 3 colecciones basándose en familia olfativa, género y notas:
+  - *Frescura y Vitalidad*: cítricos, acuáticos, veraniegos
+  - *Noche y Seducción*: orientales, gourmand, especiados, dulces
+  - *Elegancia e Intensidad*: amaderados, intensos, unisex
+- **Priorización de datos de referencia:** Sistema de fallback que usa notas reales de la base de datos cuando están disponibles, sobreescribiendo lo extraído por IA
+- **Traducción robusta de notas:** Diccionario ampliado con más de 100 traducciones de notas olfativas del inglés al español
+- **Asignación de imágenes por posición original:** Las imágenes de `imagenes_temp/` se asignan según la posición en la lista original, no por orden de procesamiento
+
+### Changed
+- **Modelo de IA:** Actualizado de Meta LLaMA 3.1 8B Instruct a **Meta LLaMA 3.3 70B Instruct** (modelo más capable)
+- **Módulo B (`modulo_b_ia_extractor.py`):**
+  - Carga de referencia al iniciar para usar como guía en el prompt
+  - Prompt mejorado para forzar el uso de notas exactas de la referencia
+  - Temperature ajustada a 0.3 para mayor consistencia
+  - Eliminación completa de todo código relacionado con búsqueda y descarga de imágenes
+  - `scrape_perfume()` retorna `imagen_path: None` para asignación en `main.py`
+- **Módulo C (`modulo_c_processor.py`):**
+  - Carga de `data/referencia_notas.json` al iniciar
+  - Si el perfume existe en la referencia, usa sus notas, género y familia olfativa directamente (notas ya en español)
+  - Nueva función `_derivar_colecciones()` con sistema de puntuación por keywords
+  - Priorización del género del CSV sobre el de la IA
+  - Funciones `traducir_texto()` y `traducir_lista_ocasiones()` para traducción al español
+- **Módulo D (`modulo_d_pdf.py`):**
+  - Diseño de índice completamente nuevo: layout tipográfico por colecciones con dos columnas (Hombres | Mujeres)
+  - Encabezados de colección se redibujan automáticamente en cada salto de página
+  - Eliminación de emojis en el índice para look más profesional
+  - Familia olfativa mostrada debajo del nombre en cursiva 8pt
+  - Manejo manual de saltos de página para evitar páginas en blanco
+- **Orquestador (`main.py`):**
+  - Carga imágenes de `imagenes_temp/` ordenadas alfabéticamente
+  - Diccionario `nombres_a_indice` para mapear nombre → posición original
+  - Asignación de imagen por índice original: perfume en posición `i` → imagen en posición `i`
+  - Validación: si no hay imagen para la posición, asigna `None` y registra advertencia
+  - Guarda rutas como `Path` completo en JSON para que el PDF las encuentre
+
+### Removed
+- **Dependencias eliminadas:**
+  - `playwright` (ya no se usa para scraping)
+  - `beautifulsoup4` (ya no se parsea HTML)
+  - `lxml` (dependencia indirecta removida)
+  - `fake-useragent` (ya no se rotan User-Agents)
+  - `requests` (ya no se descargan imágenes)
+  - `duckduckgo_search` (ya no se buscan imágenes)
+- **Funciones eliminadas en Módulo B:**
+  - Toda lógica de scraping con Playwright
+  - `buscar_imagen_web()`, `_buscar_en_duckduckgo()`, `buscar_imagen_wikipedia()`, `buscar_imagen_commons()`
+  - `validar_imagen_visual()`, `_descargar_imagen()`, `imagen_ya_descargada()`, `_es_imagen_valida()`
+- **Constantes eliminadas en Módulo B:**
+  - `IMAGENES_DIR` (ya no se descargan imágenes)
+  - `OPENROUTER_MODEL_VISION` (ya no se usa modelo con visión)
+  - `USER_AGENT_BROWSER` (ya no se descargan archivos)
+
+### Fixed
+- **Simplificación radical:** Flujo más simple y rápido sin búsquedas automáticas
+- **Sin bloqueos:** Se eliminan riesgos de rate limiting al evitar búsquedas
+- **Control total del usuario:** El usuario descarga manualmente las imágenes y las coloca en `imagenes_temp/`
+- **Orden de imágenes corregido:** Las imágenes se asignan según posición original en la lista, no por orden de procesamiento
+- **Clasificación de colecciones:** Corregido bug donde no se usaban `familia_olfativa` y `genero` de la referencia
+- **Páginas en blanco en PDF:** Manejo manual de saltos de página en `modulo_d_pdf.py` asegura que encabezados de colección se redibujen correctamente
+
 ## [1.5.0] - 2026-02-26
 ### Added
 - **Nuevo diseño tipográfico del índice:** Índice completamente rediseñado, con layout limpio y elegante
@@ -51,7 +145,7 @@
 - **Módulo D (`modulo_d_pdf.py`):**
   - Sin cambios necesarios (ya manejaba `imagen_path` como `Path | None`)
 - **Orquestador (`main.py`):**
-  - **Nueva lógica de asignación:** Carga imágenes de `imagenes_temp/` ordenadas alfabéticamente
+  - **Nueva lógica de asignación:** Carga imágenes de `imagenes_perfumes/` ordenadas alfabéticamente
   - **Asignación por posición original:** Se crea mapping `nombres_a_indice` para mantener el orden de la lista original
   - **Validación:** Si no hay imagen para la posición, asigna `None` y registra advertencia
   - Las rutas de imagen se guardan como `Path` completo en el JSON para que el PDF las encuentre
