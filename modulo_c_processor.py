@@ -31,7 +31,7 @@ except Exception as e:
     referencia_notas_c = {}
 
 
-def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre: str = "") -> list:
+def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre: str = "", descripcion: str = "") -> list:
     """
     Deriva las colecciones aplicando el sistema de puntuación dinámico.
     
@@ -45,6 +45,8 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
         Diccionario con notas de salida, corazón y fondo
     nombre : str
         Nombre del perfume (para búsqueda de palabras clave)
+    descripcion : str
+        Descripción del perfume (para búsqueda de palabras clave)
     
     Retorna
     -------
@@ -71,6 +73,9 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
         elif isinstance(notas_nivel, str):
             todas_notas.append(notas_nivel.lower())
     
+    # Normalizar descripción
+    descripcion_lower = (descripcion or "").lower()
+    
     # ─────────────────────────────────────────────
     # 1. Colección: Frescura y Vitalidad
     # ─────────────────────────────────────────────
@@ -86,10 +91,21 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
         if any(keyword in nota for keyword in keywords_notas_frescura):
             puntuaciones["Frescura y Vitalidad"] += 1
     
+    # +1 punto si la descripción contiene palabras clave de frescura
+    keywords_descripcion_frescura = ["fresco", "fresca", "frescura", "vitalidad", "ligero", "ligera", "suave", "acuático", "marino", "verano", "día", "clima cálido", "calor"]
+    if any(keyword in descripcion_lower for keyword in keywords_descripcion_frescura):
+        puntuaciones["Frescura y Vitalidad"] += 1
+    
     # -5 puntos (Penalización) si en cualquier campo de notas aparece: cuero, tabaco u oud.
     keywords_penalizacion = ["cuero", "tabaco", "oud"]
     if any(keyword in nota for nota in todas_notas for keyword in keywords_penalizacion):
         puntuaciones["Frescura y Vitalidad"] -= 5
+    
+    # -2 puntos (Penalización por contradicción) si la descripción contiene palabras de Noche o Elegancia
+    # Esto evita que perfumes intensos/seductores/amaderados aparezcan en Frescura solo por tener una nota cítrica
+    keywords_contradiccion_frescura = ["intenso", "intensa", "seductor", "seductora", "seducción", "noche", "nocturno", "amaderado", "especiado", "fondo", "corazón especiado", "misterioso", "oscuro", "fiesta", "evento"]
+    if any(keyword in descripcion_lower for keyword in keywords_contradiccion_frescura):
+        puntuaciones["Frescura y Vitalidad"] -= 2
     
     # ─────────────────────────────────────────────
     # 2. Colección: Noche y Seducción
@@ -111,6 +127,11 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
     if any(keyword in nombre_lower for keyword in keywords_nombre_noche):
         puntuaciones["Noche y Seducción"] += 1
     
+    # +1 punto si la descripción contiene palabras clave de noche/seducción
+    keywords_descripcion_noche = ["noche", "nocturno", "seductor", "seducción", "misterioso", "intenso", "fiesta", "evento", "cita", "romántico", "romance", "tarde", "evening"]
+    if any(keyword in descripcion_lower for keyword in keywords_descripcion_noche):
+        puntuaciones["Noche y Seducción"] += 1
+    
     # ─────────────────────────────────────────────
     # 3. Colección: Elegancia e Intensidad
     # ─────────────────────────────────────────────
@@ -130,11 +151,17 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
     if genero_lower == "unisex":
         puntuaciones["Elegancia e Intensidad"] += 2
     
+    # +1 punto si la descripción contiene palabras clave de elegancia/intensidad
+    keywords_descripcion_elegancia = ["elegancia", "elegante", "intenso", "intensidad", "sofisticado", "clásico", "premium", "lujo", "poderoso", "fuerte", "duradero", "proyección", "amaderado", "madera", "cuero", "fougere", "oriental", "gourmand", "especiado"]
+    if any(keyword in descripcion_lower for keyword in keywords_descripcion_elegancia):
+        puntuaciones["Elegancia e Intensidad"] += 1
+    
     # ─────────────────────────────────────────────
     # RESOLUCIÓN Y FALLBACK
     # ─────────────────────────────────────────────
     
     # Asignación: El perfume se asigna a toda colección que tenga >= 2 puntos.
+    # Esto asegura que solo perfumes con evidencia clara aparezcan en cada colección.
     colecciones_asignadas = [coleccion for coleccion, puntaje in puntuaciones.items() if puntaje >= 2]
     
     # Fallback (Garantía): Si después de sumar todo, ninguna colección llega a 2 puntos,
@@ -794,7 +821,7 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
         ocasiones_trad = inferir_ocasiones(notas_trad, descripcion_trad, familia_olfativa, genero)
     
     # Derivar colecciones automáticamente para asegurar clasificación correcta
-    colecciones_derivadas = _derivar_colecciones(familia_olfativa, genero, notas_trad, nombre_raw)
+    colecciones_derivadas = _derivar_colecciones(familia_olfativa, genero, notas_trad, nombre_raw, descripcion_trad)
     
     # Normalizar género para consistencia (capitalizar primera letra)
     genero_norm = genero.capitalize() if genero else "Unisex"

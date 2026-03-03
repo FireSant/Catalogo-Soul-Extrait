@@ -10,6 +10,11 @@
 
 ### Changed
 - **Módulo D (`modulo_d_pdf.py`):** Refinamiento de lógica en `encontrar_imagen_perfume()` para evitar falsos positivos
+- **Módulo C (`modulo_c_processor.py`):** Mejora en la precisión del algoritmo de asignación de categorías (colecciones) mediante penalizaciones y bonificaciones específicas:
+  - Penalización de -5 puntos si las notas contienen `cuero`, `tabaco` u `oud` al evaluar Frescura
+  - Penalización de -2 puntos si la descripción contiene palabras clave de Noche o Elegancia al evaluar Frescura
+  - Bonificación de +2 puntos automática para perfumes unisex en Elegancia e Intensidad
+  - Estos ajustes mejoran la discriminación entre las tres colecciones y evitan clasificaciones incorrectas
 
 ## [1.8.0] - 2026-03-02
 ### Added
