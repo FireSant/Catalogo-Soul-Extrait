@@ -20,6 +20,9 @@ import modulo_b_ia_extractor as mod_b
 import modulo_c_processor as mod_c
 import modulo_d_pdf as mod_d
 
+# Importar la función de fuzzy matching desde modulo_d_pdf
+from modulo_d_pdf import encontrar_imagen_perfume
+
 # ─────────────────────────────────────────────
 #   CONFIGURACIÓN
 # ─────────────────────────────────────────────
@@ -53,19 +56,10 @@ async def main():
         logger.warning("No hay perfumes por procesar.")
         return
 
-    # 3. Cargar imágenes manuales de la carpeta imagenes_temp/
-    imagenes_disponibles = []
-    if IMAGENES_TEMP_DIR.exists():
-        # Obtener archivos de imagen comunes, ordenados alfabéticamente
-        extensiones_imagen = (".jpg", ".jpeg", ".png", ".webp")
-        for ext in extensiones_imagen:
-            imagenes_disponibles.extend(IMAGENES_TEMP_DIR.glob(f"*{ext}"))
-        # Ordenar por nombre de archivo
-        imagenes_disponibles = sorted(imagenes_disponibles, key=lambda p: p.name.lower())
-        logger.info(f"Encontradas {len(imagenes_disponibles)} imágenes en {IMAGENES_TEMP_DIR}/")
-    else:
+    # 3. Verificar que existe el directorio de imágenes (las imágenes se buscarán dinámicamente)
+    if not IMAGENES_TEMP_DIR.exists():
         logger.warning(f"Carpeta de imágenes no encontrada: {IMAGENES_TEMP_DIR}/")
-        logger.warning("Se procederá sin imágenes (imagen_path = None)")
+        logger.warning("Se procederá sin imágenes o con imagen por defecto")
 
     resultados_finales = []
     
@@ -76,9 +70,6 @@ async def main():
     for p in pbar:
         nombre_perfume = p["nombre"]
         pbar.set_postfix({"perfume": nombre_perfume[:15]})
-        
-        # Obtener índice original en la lista para asignar imagen correcta
-        idx_original = nombres_a_indice.get(nombre_perfume, len(imagenes_disponibles))
         
         datos_scraping = None
         
@@ -101,13 +92,26 @@ async def main():
                 logger.error(f"No se pudo obtener datos de: {nombre_perfume}")
                 continue
         
-        # 5. Asignar imagen por posición original en la lista (no por índice del bucle)
+        # 5. Asignar imagen usando fuzzy matching basado en nombre, marca y género
         img_path = None
-        if idx_original < len(imagenes_disponibles):
-            img_path = imagenes_disponibles[idx_original]
-            logger.debug(f"Imagen asignada a '{nombre_perfume}': {img_path.name} (índice original: {idx_original})")
-        else:
-            logger.warning(f"Perfume '{nombre_perfume}' no tiene imagen correspondiente (índice original: {idx_original}, total imágenes: {len(imagenes_disponibles)})")
+        try:
+            # Obtener género: priorizar CSV, luego scraping, luego vacío
+            genero = p.get("genero", "")
+            if not genero and datos_scraping:
+                genero = datos_scraping.get("genero", "")
+            
+            img_path = encontrar_imagen_perfume(
+                nombre=nombre_perfume,
+                marca=p.get("marca", ""),
+                genero=genero,
+                directorio_imagenes=IMAGENES_TEMP_DIR
+            )
+            if img_path:
+                logger.debug(f"Imagen encontrada para '{nombre_perfume}': {img_path.name}")
+            else:
+                logger.warning(f"No se encontró imagen para '{nombre_perfume}'")
+        except Exception as e:
+            logger.error(f"Error buscando imagen para '{nombre_perfume}': {e}")
             img_path = None
         
         # Asegurar que el campo imagen_path esté presente

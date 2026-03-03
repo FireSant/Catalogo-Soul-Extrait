@@ -1,5 +1,33 @@
 # Changelog - Soul Extrait
 
+## [1.8.1] - 2026-03-03
+### Fixed
+- **Bug crítico en asignación de imágenes:** Se corrigió el algoritmo `encontrar_imagen_perfume()` que incorrectamente asignaba imágenes de "Lady Million" (mujer) a "1 Million" (hombre) y otros perfumes de hombre:
+  - Eliminado fallback que devolvía la primera imagen de la lista sin verificar fuzzy match
+  - Mejorado fuzzy matching en paso 2d (género inferido) incluyendo la marca en el nombre objetivo
+  - Ahora distingue correctamente entre versiones con nombres similares pero diferente género/marca
+  - Tests unitarios agregados en `tests/test_modulo_d.py::TestEncontrarImagenPerfume`
+
+### Changed
+- **Módulo D (`modulo_d_pdf.py`):** Refinamiento de lógica en `encontrar_imagen_perfume()` para evitar falsos positivos
+
+## [1.8.0] - 2026-03-02
+### Added
+- **Asignación de imágenes por género:** El sistema ahora distingue correctamente entre versiones hombre/mujer del mismo perfume:
+  - Parámetro `genero` en función `encontrar_imagen_perfume()` de `modulo_d_pdf.py`
+  - Filtrado de imágenes por palabras clave: `hombre`/`male`/`pour_homme` vs `mujer`/`female`/`pour_femme`
+  - Búsqueda por subcadena y por marca dentro del género correspondiente
+  - Fallback a primera imagen del género correcto si no hay coincidencia
+  - Integración en `main.py` priorizando género del CSV sobre scraping
+
+
+### Changed
+- **Módulo D (`modulo_d_pdf.py`):** Función `encontrar_imagen_perfume()` ahora recibe parámetro `genero` y aplica lógica de priorización por género
+- **Módulo A (`main.py`):** Paso de parámetro `genero` al buscar imágenes
+
+### Fixed
+- **Asignación incorrecta de imágenes:** Perfumes de hombre ya no usan imágenes de mujer y viceversa
+
 ## [1.7.0] - 2026-02-27
 ### Added
 - **Sistema de estaciones mejorado:** Umbral reducido de 40% a 20% para mayor sensibilidad

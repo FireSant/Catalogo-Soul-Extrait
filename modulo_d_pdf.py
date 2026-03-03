@@ -13,9 +13,11 @@ Responsabilidades:
 """
 
 import os
+import re
 import urllib.parse
 from datetime import datetime
 from pathlib import Path
+from difflib import get_close_matches
 
 from dotenv import load_dotenv
 from fpdf import FPDF
@@ -38,6 +40,336 @@ COLOR_FONDO    = (245, 241, 225) # Beige/Crema que coincide con el logo
 
 WHATSAPP_NUM = os.getenv("WHATSAPP_NUMERO", "593983548396")
 WHATSAPP_MSG = os.getenv("WHATSAPP_MENSAJE", "Hola, me interesa este perfume del catálogo Soul Extrait")
+
+
+def encontrar_imagen_perfume(nombre: str, marca: str = "", genero: str = "", directorio_imagenes: str | Path = "imagenes_temp") -> Path | None:
+    """
+    Encuentra la imagen más parecida al perfume usando fuzzy matching,
+    considerando el género para desambiguar entre versiones (ej: Light Blue Hombre/Mujer).
+
+    Parámetros
+    ----------
+    nombre : str
+        Nombre del perfume (del CSV)
+    marca : str
+        Marca del perfume (del CSV)
+    genero : str
+        Género del perfume (Hombre, Mujer, Unisex)
+    directorio_imagenes : str | Path
+        Carpeta donde están las imágenes
+
+    Retorna
+    -------
+    Path | None
+        Ruta a la imagen encontrada, o a default.jpg si no hay coincidencia.
+    """
+    dir_path = Path(directorio_imagenes)
+    if not dir_path.exists():
+        logger.warning(f"Directorio de imágenes no existe: {dir_path}")
+        return None
+
+    # Normalizar género
+    genero_lower = (genero or "").lower()
+    
+    # Palabras clave para identificar género en los nombres de archivo
+    keywords_hombre = ["hombre", "male", "men", "man", "him", "masculino", "masculine", "pour_homme", "homme", "him"]
+    keywords_mujer = ["mujer", "female", "women", "woman", "her", "femenino", "feminine", "pour_femme", "femme", "her"]
+    
+    # Limpiar palabras de género del nombre (mujer, hombre, her, him, femme, homme, etc.)
+    # para que "Light Blue Mujer" coincida con "light_blue_dolce_gabbana"
+    palabras_a_eliminar = [
+        r"\bmujer\b", r"\bhombre\b", r"\bher\b", r"\bhim\b",
+        r"\bfemme\b", r"\bhomme\b", r"\bwomen\b", r"\bmen\b",
+        r"\bwoman\b", r"\bman\b", r"\bgirl\b", r"\bboy\b"
+    ]
+    nombre_limpio = nombre.lower()
+    for patron in palabras_a_eliminar:
+        nombre_limpio = re.sub(patron, "", nombre_limpio, flags=re.IGNORECASE)
+    
+    # Crear "nombre objetivo" normalizado: solo el nombre del perfume (sin marca)
+    # Esto evita que la marca interfiera en el fuzzy matching cuando el archivo no la incluye
+    nombre_objetivo = re.sub(r"[^a-z0-9\s]", "", nombre_limpio)  # Quitar caracteres especiales
+    nombre_objetivo = re.sub(r"\s+", "_", nombre_objetivo.strip())  # Espacios → guiones bajos
+    
+    # Preparar nombre_busqueda (sin espacios, guiones, etc.) para comparaciones
+    nombre_busqueda = nombre.lower().replace(" ", "").replace("-", "").replace("'", "").lower()
+    
+    # Para nombres de 1 carácter, incluir la marca en el nombre objetivo para fuzzy matching
+    # (evita falsos positivos en búsqueda por subcadena)
+    if len(nombre_busqueda) == 1 and marca:
+        marca_limpia = re.sub(r"[^a-z0-9\s]", "", marca.lower())
+        marca_limpia = re.sub(r"\s+", "_", marca_limpia.strip())
+        nombre_objetivo = f"{nombre_objetivo}_{marca_limpia}"
+
+    # Obtener lista de archivos de imagen disponibles
+    extensiones_imagen = (".jpg", ".jpeg", ".png", ".webp", ".avif")
+    archivos_disponibles = []
+    for ext in extensiones_imagen:
+        archivos_disponibles.extend(dir_path.glob(f"*{ext}"))
+
+    if not archivos_disponibles:
+        logger.warning(f"No se encontraron imágenes en {dir_path}")
+        return None
+
+    # Extraer nombres de archivo (sin extensión) para comparar
+    nombres_archivo = []
+    for archivo in archivos_disponibles:
+        nombre_sin_ext = archivo.stem.lower()  # Nombre sin extensión
+        nombres_archivo.append((nombre_sin_ext, archivo))
+
+    # Si no hay imágenes, retornar None
+    if not nombres_archivo:
+        return None
+
+    # ─────────────────────────────────────────────────────────
+    # ESTRATEGIA DE BÚSQUEDA CON GÉNERO
+    # ─────────────────────────────────────────────────────────
+    
+    # 1. Primero, filtrar por género si está especificado
+    candidatos_genero = []
+    if genero_lower in ["hombre", "male", "men", "man", "masculino", "masculine"]:
+        # Buscar imágenes que contengan palabras clave de hombre
+        for nombre_sin_ext, archivo in nombres_archivo:
+            if any(keyword in nombre_sin_ext for keyword in keywords_hombre):
+                candidatos_genero.append((nombre_sin_ext, archivo))
+    elif genero_lower in ["mujer", "female", "women", "woman", "femenino", "feminine"]:
+        # Buscar imágenes que contengan palabras clave de mujer
+        for nombre_sin_ext, archivo in nombres_archivo:
+            if any(keyword in nombre_sin_ext for keyword in keywords_mujer):
+                candidatos_genero.append((nombre_sin_ext, archivo))
+    else:
+        # Para Unisex o género no especificado, considerar todos
+        candidatos_genero = nombres_archivo.copy()
+    
+    # 2. Intentar encontrar coincidencia en los candidatos con género
+    if candidatos_genero:
+        # 2a. Para nombres de 1 carácter, saltar a fuzzy matching directamente
+        # (la búsqueda por subcadena es demasiado permisiva y genera falsos positivos)
+        nombre_busqueda = nombre.lower().replace(" ", "").replace("-", "").replace("'", "").lower()
+        if len(nombre_busqueda) <= 1:
+            # Saltar a 2c (fuzzy matching)
+            pass
+        else:
+            for nombre_sin_ext, archivo in candidatos_genero:
+                archivo_nombre = nombre_sin_ext.replace("_", "").replace(" ", "").replace("-", "").replace("'", "").lower()
+                if nombre_busqueda in archivo_nombre or archivo_nombre in nombre_busqueda:
+                    logger.info(f"Imagen encontrada por subcadena para '{nombre}' ({genero}): {archivo.name}")
+                    return archivo
+        
+        # 2b. Si no hay subcadena, buscar por marca (solo si también contiene el nombre)
+        # Para nombres de 1 carácter, saltar a fuzzy matching (demasiado permisivo)
+        if marca and len(nombre_busqueda) > 1:
+            marca_busqueda = marca.lower().replace(" ", "").replace("&", "").replace(".", "")
+            for nombre_sin_ext, archivo in candidatos_genero:
+                archivo_nombre = nombre_sin_ext.replace("_", "").replace(" ", "").lower()
+                if marca_busqueda in archivo_nombre:
+                    # Verificar que el nombre del perfume también esté presente
+                    if len(nombre_busqueda) == 2:
+                        # Para nombres de 2 caracteres, usar búsqueda de palabra completa
+                        patron_nombre = r'(^|[_\-.\s])' + re.escape(nombre_busqueda) + r'($|[_\-.\s])'
+                        if re.search(patron_nombre, archivo_nombre, re.IGNORECASE):
+                            logger.info(f"Imagen encontrada por marca (con nombre) para '{nombre}' ({marca}, {genero}): {archivo.name}")
+                            return archivo
+                    else:
+                        if nombre_busqueda in archivo_nombre:
+                            logger.info(f"Imagen encontrada por marca (con nombre) para '{nombre}' ({marca}, {genero}): {archivo.name}")
+                            return archivo
+        
+        # 2c. Si no hay subcadena ni marca, usar fuzzy matching con cutoff más alto
+        lista_candidatos = [n[0] for n in candidatos_genero]
+        coincidencias = get_close_matches(nombre_objetivo, lista_candidatos, n=1, cutoff=0.8)
+        
+        if coincidencias:
+            # Verificar que la coincidencia no sea demasiado genérica
+            # (evitar que "Legend" coincida con "Explorer" por ejemplo)
+            mejor_match = coincidencias[0]
+            # La coincidencia debe contener al menos una palabra clave del nombre original
+            palabras_clave = nombre_objetivo.replace('_', '').lower()
+            match_limpio = mejor_match.replace('_', '').lower()
+            
+            # Si la coincidencia es muy genérica (ej: "legend" para "explorer"), no usarla
+            if len(match_limpio) < len(palabras_clave) * 0.7:
+                logger.warning(f"Fuzzy match demasiado débil para '{nombre}': '{mejor_match}' ({(len(match_limpio)/len(palabras_clave)*100):.0f}%)")
+            else:
+                # Buscar el archivo correspondiente al nombre coincidente
+                for nombre_sin_ext, archivo in candidatos_genero:
+                    if nombre_sin_ext == mejor_match:
+                        logger.info(f"Imagen encontrada (fuzzy) para '{nombre}' ({marca}, {genero}): {archivo.name}")
+                        return archivo
+    
+    # 2d. Si NO hay coincidencias en candidatos con género (candidatos_genero vacío o sin match),
+    #      intentar inferir género de los archivos y filtrar ANTES de búsqueda global
+    if genero_lower:
+        # No hay candidatos con género, intentar inferir género del archivo
+        candidatos_por_genero_inferido = []
+        keywords_hombre_extra = ["1_million", "invictus", "phantom", "eros", "le_male", "ultra_male", "bad_boy", "toy_boy", "stronger_with_you", "bottled", "bleu", "sauvage", "dior", "fahrenheit", "explorer", "legend", "polo_blue", "y_ysl", "dylan_blue", "acqua_di_gio", "212_vip_men", "club_de_nuit_intense_man", "asad", "aventus", "hawas", "terre_d'hermes", "valentino_uomo", "paco_rabanne"]
+        keywords_mujer_extra = ["lady_million", "ariana_grande", "coco_mademoiselle", "j'adore", "la_vie_est_belle", "libre", "black_opium", "miss_dior", "fantasy", "bright_crystal", "can_can", "chanel_5", "cloud", "good_girl_blush", "idole", "light_blue_mujer", "scandal_mujer", "si", "sweet_like_candy", "thank_u_next", "yara", "212_vip_rose", "my_way", "olympea", "baccarat_rouge_540", "lost_cherry", "ombre_nomade", "santal_33", "tobacco_vanille", "hacivat", "khamrah"]
+        
+        for nombre_sin_ext, archivo in nombres_archivo:
+            archivo_lower = nombre_sin_ext.lower()
+            if genero_lower in ["hombre", "male", "men", "man", "masculino", "masculine"]:
+                # Para hombre, preferir archivos que NO contengan palabras de mujer
+                es_mujer = any(kw in archivo_lower for kw in keywords_mujer_extra) or any(kw in archivo_lower for kw in keywords_mujer)
+                if not es_mujer:
+                    candidatos_por_genero_inferido.append((nombre_sin_ext, archivo))
+            elif genero_lower in ["mujer", "female", "women", "woman", "femenino", "feminine"]:
+                # Para mujer, preferir archivos que contengan palabras de mujer
+                es_mujer = any(kw in archivo_lower for kw in keywords_mujer_extra) or any(kw in archivo_lower for kw in keywords_mujer)
+                if es_mujer:
+                    candidatos_por_genero_inferido.append((nombre_sin_ext, archivo))
+        
+        if candidatos_por_genero_inferido:
+            # Intentar fuzzy matching solo con candidatos que coincidan con el género inferido
+            lista_candidatos = [n[0] for n in candidatos_por_genero_inferido]
+            # Para el fuzzy matching con género inferido, incluir la marca en el nombre objetivo si está disponible
+            # Esto ayuda a distinguir entre versiones como "1 Million" vs "Lady Million"
+            nombre_objetivo_inferido = nombre_objetivo
+            if marca and len(nombre_busqueda) > 1:
+                # Solo incluir marca si el nombre tiene más de 1 carácter (evita falsos positivos)
+                marca_limpia = re.sub(r"[^a-z0-9\s]", "", marca.lower())
+                marca_limpia = re.sub(r"\s+", "_", marca_limpia.strip())
+                # Solo agregar marca si no está ya presente en el nombre objetivo
+                if marca_limpia not in nombre_objetivo_inferido:
+                    nombre_objetivo_inferido = f"{nombre_objetivo_inferido}_{marca_limpia}"
+            coincidencias = get_close_matches(nombre_objetivo_inferido, lista_candidatos, n=1, cutoff=0.8)
+            if coincidencias:
+                mejor_match = coincidencias[0]
+                # Verificar que la coincidencia sea suficientemente específica
+                palabras_clave = nombre_objetivo_inferido.replace('_', '').lower()
+                match_limpio = mejor_match.replace('_', '').lower()
+                
+                if len(match_limpio) >= len(palabras_clave) * 0.7:
+                    for nombre_sin_ext, archivo in candidatos_por_genero_inferido:
+                        if nombre_sin_ext == mejor_match:
+                            logger.info(f"Imagen encontrada (fuzzy con género inferido) para '{nombre}' ({genero}): {archivo.name}")
+                            return archivo
+                else:
+                    logger.warning(f"Fuzzy match con género inferido demasiado débil para '{nombre}': '{mejor_match}' ({(len(match_limpio)/len(palabras_clave)*100):.0f}%)")
+            # Si no hay fuzzy match, continuar con búsqueda global (no devolver primera de la lista)
+    
+    # 3. Si no se encontró en candidatos con género, buscar entre TODOS los archivos
+    # (esto permite encontrar imágenes sin palabra clave de género)
+    lista_nombres = [n[0] for n in nombres_archivo]
+    coincidencias = get_close_matches(nombre_objetivo, lista_nombres, n=1, cutoff=0.7)
+    
+    if coincidencias:
+        for nombre_sin_ext, archivo in nombres_archivo:
+            if nombre_sin_ext == coincidencias[0]:
+                logger.info(f"Imagen encontrada (búsqueda global) para '{nombre}' ({marca}): {archivo.name}")
+                return archivo
+
+    # 4. Búsqueda por subcadena en TODOS los archivos
+    # Usar el nombre original (sin eliminar palabras de género) para la búsqueda
+    nombre_busqueda = nombre.lower().replace(" ", "").replace("-", "").replace("'", "").lower()
+    # Para nombres de 1 carácter, saltar a fuzzy matching (demasiado permisivo)
+    if len(nombre_busqueda) > 1:
+        # Para nombres de 2 caracteres, la subcadena debe coincidir como palabra completa
+        requiere_palabra_completa = len(nombre_busqueda) == 2
+        for nombre_sin_ext, archivo in nombres_archivo:
+            archivo_nombre = nombre_sin_ext.replace("_", "").replace(" ", "").replace("-", "").replace("'", "").lower()
+            if requiere_palabra_completa:
+                # Buscar como palabra separada (al inicio/fin o rodeada de no-letras)
+                patron = r'(^|[_\-.\s])' + re.escape(nombre_busqueda) + r'($|[_\-.\s])'
+                if re.search(patron, archivo_nombre, re.IGNORECASE):
+                    logger.info(f"Imagen encontrada por subcadena (global, palabra completa) para '{nombre}': {archivo.name}")
+                    return archivo
+            else:
+                if nombre_busqueda in archivo_nombre or archivo_nombre in nombre_busqueda:
+                    logger.info(f"Imagen encontrada por subcadena (global) para '{nombre}': {archivo.name}")
+                    return archivo
+    
+    # 4b. Búsqueda por palabras individuales (más flexible)
+    # Si no se encontró por subcadena exacta, buscar que la mayoría de palabras estén presentes
+    palabras_nombre = set(nombre.lower().split())
+    if len(palabras_nombre) >= 2:  # Solo si hay al menos 2 palabras
+        mejor_match = None
+        mejor_puntaje = 0
+        for nombre_sin_ext, archivo in nombres_archivo:
+            archivo_nombre_limpio = nombre_sin_ext.replace("_", " ").replace("-", " ").lower()
+            palabras_archivo = set(archivo_nombre_limpio.split())
+            # Calcular intersección
+            palabras_comunes = palabras_nombre.intersection(palabras_archivo)
+            puntaje = len(palabras_comunes) / len(palabras_nombre)
+            if puntaje > 0.7 and puntaje > mejor_puntaje:  # 70% de las palabras deben coincidir
+                mejor_match = (nombre_sin_ext, archivo, puntaje)
+                mejor_puntaje = puntaje
+        if mejor_match:
+            logger.info(f"Imagen encontrada por palabras ({int(mejor_puntaje*100)}%) para '{nombre}': {mejor_match[1].name}")
+            return mejor_match[1]
+
+    # 5. Búsqueda por marca en TODOS los archivos (solo si también contiene el nombre)
+    # Para nombres de 1 carácter, saltar a fuzzy matching (demasiado permisivo)
+    if marca and len(nombre_busqueda) > 1:
+        marca_busqueda = marca.lower().replace(" ", "").replace("&", "").replace(".", "")
+        for nombre_sin_ext, archivo in nombres_archivo:
+            archivo_nombre = nombre_sin_ext.replace("_", "", 1).replace(" ", "").lower()
+            if marca_busqueda in archivo_nombre:
+                # Verificar que el nombre del perfume también esté presente
+                if len(nombre_busqueda) == 2:
+                    # Para nombres de 2 caracteres, usar búsqueda de palabra completa
+                    patron_nombre = r'(^|[_\-.\s])' + re.escape(nombre_busqueda) + r'($|[_\-.\s])'
+                    if re.search(patron_nombre, archivo_nombre, re.IGNORECASE):
+                        logger.info(f"Imagen encontrada por marca (global, con nombre) para '{nombre}' ({marca}): {archivo.name}")
+                        return archivo
+                else:
+                    if nombre_busqueda in archivo_nombre:
+                        logger.info(f"Imagen encontrada por marca (global, con nombre) para '{nombre}' ({marca}): {archivo.name}")
+                        return archivo
+
+    # 6. Búsqueda por género en nombres de archivo (para archivos sin keywords explícitas)
+    # Si los archivos no tienen palabras clave de género, inferir género del archivo y filtrar
+    # Se activa cuando: hay género especificado Y (candidatos_genero está vacío O no hubo filtrado efectivo)
+    if genero_lower and (not candidatos_genero or len(candidatos_genero) == len(nombres_archivo)):
+        # No hubo filtrado efectivo (todos pasaron) o no hay candidatos, intentar inferir género del archivo
+        candidatos_por_genero_inferido = []
+        keywords_hombre_extra = ["1_million", "invictus", "phantom", "eros", "le_male", "ultra_male", "bad_boy", "toy_boy", "stronger_with_you", "bottled", "bleu", "sauvage", "dior", "fahrenheit", "explorer", "legend", "polo_blue", "y_ysl", "dylan_blue", "acqua_di_gio", "212_vip_men", "club_de_nuit_intense_man", "asad", "aventus", "hawas", "terre_d'hermes", "valentino_uomo", "paco_rabanne"]
+        keywords_mujer_extra = ["lady_million", "ariana_grande", "coco_mademoiselle", "j'adore", "la_vie_est_belle", "libre", "black_opium", "miss_dior", "fantasy", "bright_crystal", "can_can", "chanel_5", "cloud", "good_girl_blush", "idole", "light_blue_mujer", "scandal_mujer", "si", "sweet_like_candy", "thank_u_next", "yara", "212_vip_rose", "my_way", "olympea", "baccarat_rouge_540", "lost_cherry", "ombre_nomade", "santal_33", "tobacco_vanille", "hacivat", "khamrah"]
+        
+        for nombre_sin_ext, archivo in nombres_archivo:
+            archivo_lower = nombre_sin_ext.lower()
+            if genero_lower in ["hombre", "male", "men", "man", "masculino", "masculine"]:
+                # Para hombre, preferir archivos que NO contengan palabras de mujer
+                es_mujer = any(kw in archivo_lower for kw in keywords_mujer_extra) or any(kw in archivo_lower for kw in keywords_mujer)
+                if not es_mujer:
+                    candidatos_por_genero_inferido.append((nombre_sin_ext, archivo))
+            elif genero_lower in ["mujer", "female", "women", "woman", "femenino", "feminine"]:
+                # Para mujer, preferir archivos que contengan palabras de mujer
+                es_mujer = any(kw in archivo_lower for kw in keywords_mujer_extra) or any(kw in archivo_lower for kw in keywords_mujer)
+                if es_mujer:
+                    candidatos_por_genero_inferido.append((nombre_sin_ext, archivo))
+        
+        if candidatos_por_genero_inferido:
+            # Intentar fuzzy matching solo con candidatos que coincidan con el género inferido
+            lista_candidatos = [n[0] for n in candidatos_por_genero_inferido]
+            coincidencias = get_close_matches(nombre_objetivo, lista_candidatos, n=1, cutoff=0.8)
+            if coincidencias:
+                mejor_match = coincidencias[0]
+                palabras_clave = nombre_objetivo.replace('_', '').lower()
+                match_limpio = mejor_match.replace('_', '').lower()
+                
+                if len(match_limpio) >= len(palabras_clave) * 0.7:
+                    for nombre_sin_ext, archivo in candidatos_por_genero_inferido:
+                        if nombre_sin_ext == mejor_match:
+                            logger.info(f"Imagen encontrada (fuzzy con género inferido) para '{nombre}' ({genero}): {archivo.name}")
+                            return archivo
+            # Si no hay fuzzy match válido, NO usar la primera de la lista; continuar con búsqueda global
+
+    # 7. NO usar fallback de primera imagen de género - puede ser incorrecta
+    # Mejor continuar con búsqueda global o usar default.jpg
+
+    # 8. Fallback final: retornar default.jpg si existe
+    default_img = dir_path / "default.jpg"
+    if default_img.exists():
+        logger.info(f"Usando imagen por defecto para '{nombre}' ({marca})")
+        return default_img
+
+    # 9. Último recurso: retornar la primera imagen disponible
+    if archivos_disponibles:
+        logger.warning(f"No se encontró coincidencia para '{nombre}'. Usando primera imagen disponible.")
+        return archivos_disponibles[0]
+
+    return None
+
 
 class PDFCatalog(FPDF):
     def header(self):

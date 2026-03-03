@@ -517,3 +517,193 @@ class TestIntegracion:
         assert "Bergamota" in resultado_c["notas"]["salida"]
         assert "Rosa" in resultado_c["notas"]["corazon"]
         assert "Vainilla" in resultado_c["notas"]["fondo"]
+
+
+# ─────────────────────────────────────────────────────────
+#  TESTS: ENCONTRAR IMAGEN PERFUME (FUZZY MATCHING CON GÉNERO)
+# ─────────────────────────────────────────────────────────
+
+class TestEncontrarImagenPerfume:
+   """Tests para la función encontrar_imagen_perfume con casos de uso reales."""
+
+   def test_1_million_hombre_asigna_imagen_correcta(self, tmp_path):
+       """1 Million (hombre) debe asignar 1_million_paco_rabanne.jpg."""
+       # Preparar directorio de imágenes temporal con imágenes de prueba
+       img_dir = tmp_path / "imagenes_temp"
+       img_dir.mkdir()
+       
+       # Crear imágenes de prueba
+       imagenes = [
+           "1_million_paco_rabanne.jpg",
+           "Lady_million.webp",
+           "Invictus_Paco_rabanne.jpg",
+           "Eros_versace.jpg"
+       ]
+       for nombre in imagenes:
+           (img_dir / nombre).write_bytes(b"fake image data")
+       
+       # Probar búsqueda
+       resultado = mod_d.encontrar_imagen_perfume(
+           nombre="1 Million",
+           marca="Paco Rabanne",
+           genero="hombre",
+           directorio_imagenes=str(img_dir)
+       )
+       
+       assert resultado is not None
+       assert resultado.name == "1_million_paco_rabanne.jpg"
+
+   def test_lady_million_mujer_asigna_imagen_correcta(self, tmp_path):
+       """Lady Million (mujer) debe asignar Lady_million.webp."""
+       img_dir = tmp_path / "imagenes_temp"
+       img_dir.mkdir()
+       
+       imagenes = [
+           "1_million_paco_rabanne.jpg",
+           "Lady_million.webp"
+       ]
+       for nombre in imagenes:
+           (img_dir / nombre).write_bytes(b"fake image data")
+       
+       resultado = mod_d.encontrar_imagen_perfume(
+           nombre="Lady Million",
+           marca="Paco Rabanne",
+           genero="mujer",
+           directorio_imagenes=str(img_dir)
+       )
+       
+       assert resultado is not None
+       assert resultado.name == "Lady_million.webp"
+
+   def test_invictus_hombre_asigna_imagen_correcta(self, tmp_path):
+       """Invictus (hombre) debe asignar Invictus_Paco_rabanne.jpg."""
+       img_dir = tmp_path / "imagenes_temp"
+       img_dir.mkdir()
+       
+       imagenes = [
+           "1_million_paco_rabanne.jpg",
+           "Invictus_Paco_rabanne.jpg",
+           "Lady_million.webp"
+       ]
+       for nombre in imagenes:
+           (img_dir / nombre).write_bytes(b"fake image data")
+       
+       resultado = mod_d.encontrar_imagen_perfume(
+           nombre="Invictus",
+           marca="Paco Rabanne",
+           genero="hombre",
+           directorio_imagenes=str(img_dir)
+       )
+       
+       assert resultado is not None
+       assert resultado.name == "Invictus_Paco_rabanne.jpg"
+
+   def test_eros_hombre_asigna_imagen_correcta(self, tmp_path):
+       """Eros (hombre) debe asignar Eros_versace.jpg."""
+       img_dir = tmp_path / "imagenes_temp"
+       img_dir.mkdir()
+       
+       imagenes = [
+           "1_million_paco_rabanne.jpg",
+           "Eros_versace.jpg",
+           "Lady_million.webp"
+       ]
+       for nombre in imagenes:
+           (img_dir / nombre).write_bytes(b"fake image data")
+       
+       resultado = mod_d.encontrar_imagen_perfume(
+           nombre="Eros",
+           marca="Versace",
+           genero="hombre",
+           directorio_imagenes=str(img_dir)
+       )
+       
+       assert resultado is not None
+       assert resultado.name == "Eros_versace.jpg"
+
+   def test_distincion_entre_nombres_similares_con_diferente_genero(self, tmp_path):
+       """Verifica que nombres similares con diferente género no se confunden."""
+       img_dir = tmp_path / "imagenes_temp"
+       img_dir.mkdir()
+       
+       # Simular imágenes reales del proyecto
+       imagenes = [
+           "1_million_paco_rabanne.jpg",  # Hombre
+           "Lady_million.webp",            # Mujer
+           "Light_blue_hombre.jpg",        # Hombre
+           "Light_blue_mujer.png"          # Mujer
+       ]
+       for nombre in imagenes:
+           (img_dir / nombre).write_bytes(b"fake image data")
+       
+       # Probar ambos casos
+       resultado_1m = mod_d.encontrar_imagen_perfume(
+           nombre="1 Million",
+           marca="Paco Rabanne",
+           genero="hombre",
+           directorio_imagenes=str(img_dir)
+       )
+       resultado_lm = mod_d.encontrar_imagen_perfume(
+           nombre="Lady Million",
+           marca="Paco Rabanne",
+           genero="mujer",
+           directorio_imagenes=str(img_dir)
+       )
+       
+       assert resultado_1m.name == "1_million_paco_rabanne.jpg"
+       assert resultado_lm.name == "Lady_million.webp"
+       # Asegurar que no están intercambiados
+       assert resultado_1m != resultado_lm
+
+   def test_light_blue_hombre_vs_mujer(self, tmp_path):
+       """Light Blue Hombre y Mujer deben asignar imágenes diferentes."""
+       img_dir = tmp_path / "imagenes_temp"
+       img_dir.mkdir()
+       
+       imagenes = [
+           "Light_blue_hombre.jpg",
+           "Light_blue_mujer.png"
+       ]
+       for nombre in imagenes:
+           (img_dir / nombre).write_bytes(b"fake image data")
+       
+       resultado_hombre = mod_d.encontrar_imagen_perfume(
+           nombre="Light Blue Pour Homme",
+           marca="Dolce & Gabbana",
+           genero="hombre",
+           directorio_imagenes=str(img_dir)
+       )
+       resultado_mujer = mod_d.encontrar_imagen_perfume(
+           nombre="Light Blue",
+           marca="Dolce & Gabbana",
+           genero="mujer",
+           directorio_imagenes=str(img_dir)
+       )
+       
+       assert resultado_hombre.name == "Light_blue_hombre.jpg"
+       assert resultado_mujer.name == "Light_blue_mujer.png"
+
+   def test_retorna_none_sin_imagenes(self, tmp_path):
+       """Debe retornar None si no hay imágenes en el directorio."""
+       img_dir = tmp_path / "imagenes_vacias"
+       img_dir.mkdir()
+       
+       resultado = mod_d.encontrar_imagen_perfume(
+           nombre="Test",
+           marca="Test",
+           genero="hombre",
+           directorio_imagenes=str(img_dir)
+       )
+       
+       assert resultado is None
+
+   def test_retorna_none_directorio_no_existe(self):
+       """Debe retornar None si el directorio no existe."""
+       resultado = mod_d.encontrar_imagen_perfume(
+           nombre="Test",
+           marca="Test",
+           genero="hombre",
+           directorio_imagenes="directorio_inexistente"
+       )
+       
+       assert resultado is None
