@@ -476,7 +476,7 @@ class GeneradorCatalog:
         self.pdf.set_y(240)
         self.pdf.set_font("helvetica", "I", 14)
         self.pdf.set_text_color(120)
-        self.pdf.multi_cell(0, 8, "Expertos en capturar memorias en frascos.\nUna selección curada de las mejores fragancias del mundo.", 0, "C")
+        self.pdf.multi_cell(0, 8, "Una selección de las mejores fragancias del mundo.", 0, "C")
         
         self.pdf.set_y(self.pdf.get_y() + 5) # Añadir un pequeño margen después del multi_cell
         self.pdf.set_font("helvetica", "B", 14)

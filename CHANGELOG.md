@@ -1,5 +1,31 @@
 # Changelog - Soul Extrait
 
+## [1.8.2] - 2026-03-03
+### Added
+- **Inferencia automática de familia olfativa:** Nueva función `inferir_familia_olfativa()` en `modulo_c_processor.py` que analiza las notas, nombre, descripción y género para determinar la familia olfativa cuando la IA no la proporciona:
+  - Sistema de puntuación por 12 familias: Cítrico, Aromático, Floral, Frutal, Oriental, Gourmand, Amaderado, Acuático, Verde, Chypre, Fougère, Cuero
+  - Detección de combinaciones específicas: Amaderado-Aromático, Floral-Gourmand, Cítrico-Acuático
+  - Bonificaciones por keywords en nombre y descripción
+  - Fallback basado en género si no hay suficientes indicadores
+  - Garantiza que TODOS los perfumes tengan una familia olfativa en el índice del PDF
+
+### Fixed
+- **Bug crítico en asignación de imágenes:** Se corrigió el algoritmo `encontrar_imagen_perfume()` que incorrectamente asignaba imágenes de "Lady Million" (mujer) a "1 Million" (hombre) y otros perfumes de hombre:
+  - Eliminado fallback que devolvía la primera imagen de la lista sin verificar fuzzy match
+  - Mejorado fuzzy matching en paso 2d (género inferido) incluyendo la marca en el nombre objetivo
+  - Ahora distingue correctamente entre versiones con nombres similares pero diferente género/marca
+  - Tests unitarios agregados en `tests/test_modulo_d.py::TestEncontrarImagenPerfume`
+
+### Changed
+- **Módulo C (`modulo_c_processor.py`):**
+  - Integrada inferencia de familia olfativa en la función `procesar()` para ambos caminos (con/sin referencia)
+  - La descripción ahora se traduce ANTES de ser usada para inferencia
+  - Mejora en la precisión del algoritmo de asignación de categorías (colecciones) mediante penalizaciones y bonificaciones específicas:
+    - Penalización de -5 puntos si las notas contienen `cuero`, `tabaco` u `oud` al evaluar Frescura
+    - Penalización de -2 puntos si la descripción contiene palabras clave de Noche o Elegancia al evaluar Frescura
+    - Bonificación de +2 puntos automática para perfumes unisex en Elegancia e Intensidad
+- **Módulo D (`modulo_d_pdf.py`):** Refinamiento de lógica en `encontrar_imagen_perfume()` para evitar falsos positivos
+
 ## [1.8.1] - 2026-03-03
 ### Fixed
 - **Bug crítico en asignación de imágenes:** Se corrigió el algoritmo `encontrar_imagen_perfume()` que incorrectamente asignaba imágenes de "Lady Million" (mujer) a "1 Million" (hombre) y otros perfumes de hombre:

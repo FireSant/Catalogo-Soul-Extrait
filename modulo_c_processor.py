@@ -80,10 +80,14 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
     # 1. Colección: Frescura y Vitalidad
     # ─────────────────────────────────────────────
     
-    # +2 puntos si la familia_olfativa contiene: cítrico, citico, acuático, marino, ozónico o verde.
+    # +2 puntos si la familia_olfativa contiene: cítrico, citico, acuático, marino, ozónico o verde,
+    # pero NO contiene palabras de Noche/Elegancia (oriental, ámbar, gourmand, amaderado, etc.)
     keywords_familia_frescura = ["cítrico", "citico", "acuático", "marino", "ozónico", "verde"]
+    keywords_no_frescura = ["oriental", "ambar", "gourmand", "amaderado", "madera", "chypre", "cuero", "fougere", "especiado"]
     if any(keyword in familia_lower for keyword in keywords_familia_frescura):
-        puntuaciones["Frescura y Vitalidad"] += 2
+        # Solo sumar si la familia no contiene indicadores de Noche/Elegancia
+        if not any(keyword in familia_lower for keyword in keywords_no_frescura):
+            puntuaciones["Frescura y Vitalidad"] += 2
     
     # +1 punto por cada coincidencia en las notas que contenga: limón, bergamota, menta, naranja o neroli.
     keywords_notas_frescura = ["limón", "limon", "bergamota", "menta", "naranja", "neroli"]
@@ -178,6 +182,254 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
         colecciones_asignadas = ["Elegancia e Intensidad"]
     
     return list(set(colecciones_asignadas))  # Eliminar duplicados por si acaso
+
+
+def inferir_familia_olfativa(notas: dict, nombre: str = "", descripcion: str = "", genero: str = "") -> str:
+    """
+    Infiere la familia olfativa del perfume basándose en sus notas, nombre, descripción y género.
+    
+    Parámetros
+    ----------
+    notas : dict
+        {"salida": [...], "corazon": [...], "fondo": [...]}
+    nombre : str
+        Nombre del perfume
+    descripcion : str
+        Descripción del perfume
+    genero : str
+        Género (Hombre, Mujer, Unisex)
+    
+    Retorna
+    -------
+    str
+        Familia olfativa inferida (ej: "Cítrico-Aromático", "Floral-Gourmand", etc.)
+    """
+    # Aplanar todas las notas en una lista única y normalizar
+    todas_notas = []
+    for nivel in ["salida", "corazon", "fondo"]:
+        notas_nivel = notas.get(nivel, [])
+        if isinstance(notas_nivel, list):
+            todas_notas.extend([n.lower() if isinstance(n, str) else str(n).lower() for n in notas_nivel])
+        elif isinstance(notas_nivel, str):
+            todas_notas.append(notas_nivel.lower())
+    
+    # Normalizar textos
+    nombre_lower = (nombre or "").lower()
+    descripcion_lower = (descripcion or "").lower()
+    genero_lower = (genero or "").lower()
+    
+    # Sistema de puntuación por familia
+    puntuaciones = {
+        "Cítrico": 0,
+        "Aromático": 0,
+        "Floral": 0,
+        "Frutal": 0,
+        "Oriental": 0,
+        "Gourmand": 0,
+        "Amaderado": 0,
+        "Acuático": 0,
+        "Verde": 0,
+        "Chypre": 0,
+        "Fougère": 0,
+        "Cuero": 0,
+    }
+    
+    # ─────────────────────────────────────────────
+    # 1. CÍTRICO
+    # ─────────────────────────────────────────────
+    keywords_citrico = ["limón", "limon", "bergamota", "naranja", "mandarina", "pomelo", "toronja", "yuzu", "citrus", "neroli", "petitgrain"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_citrico):
+            puntuaciones["Cítrico"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 2. AROMÁTICO (lavanda, romero, hierbas frescas)
+    # ─────────────────────────────────────────────
+    keywords_aromatico = ["lavanda", "romero", "salvia", "menta", "albahaca", "hierbabuena", "tomillo", "estragón", "artemisa", "pimienta"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_aromatico):
+            puntuaciones["Aromático"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 3. FLORAL
+    # ─────────────────────────────────────────────
+    keywords_floral = ["rosa", "jazmín", "lirio", "peonía", "magnolia", "gardenia", "tuberosa", "ylang-ylang", "violeta", "iris", "freesia", "azucena", "clavel", "margarita"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_floral):
+            puntuaciones["Floral"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 4. FRUTAL (frutas no cítricas)
+    # ─────────────────────────────────────────────
+    keywords_frutal = ["manzana", "pera", "melocotón", "cereza", "frambuesa", "fresa", "mango", "litchi", "maracuyá", "higo", "ciruela", "durazno", "frutilla"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_frutal):
+            puntuaciones["Frutal"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 5. ORIENTAL (ámbar, especias, misterio)
+    # ─────────────────────────────────────────────
+    keywords_oriental = ["ámbar", "ambar", "vainilla", "benjuí", "benzoin", "mirra", "olíbano", "incienso", "bálsamo", "labdanum"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_oriental):
+            puntuaciones["Oriental"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 6. GOURMAND (comida, dulce, postre)
+    # ─────────────────────────────────────────────
+    keywords_gourmand = ["caramelo", "chocolate", "café", "miel", "praliné", "haba tonka", "tonka", "crema", "nata", "leche", "azúcar", "cacao", "marshmallow", "algodón de azúcar"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_gourmand):
+            puntuaciones["Gourmand"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 7. AMADERADO (maderas)
+    # ─────────────────────────────────────────────
+    keywords_amaderado = ["sándalo", "cedro", "vetiver", "pachulí", "roble", "pino", "abeto", "guayaco", "agarwood", "oud", "cashmeran", "maderas", "madera"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_amaderado):
+            puntuaciones["Amaderado"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 8. ACUÁTICO / MARINO
+    # ─────────────────────────────────────────────
+    keywords_acuatico = ["marina", "marino", "acuático", "oceano", "oceánica", "sal marina", "algas", "agua", "water", "ocean", "sea", "jazmín de agua"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_acuatico):
+            puntuaciones["Acuático"] += 2
+    
+    # ─────────────────────────────────────────────
+    # 9. VERDE (hojas, hierbas, vegetación)
+    # ─────────────────────────────────────────────
+    keywords_verde = ["verde", "hoja", "hojas", "hierba", "césped", "prado", "jardín", "botánica", "planta", "tallo", "foliage"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_verde):
+            puntuaciones["Verde"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 10. CHYPRE (nota de roble-musgo-ámbar)
+    # ─────────────────────────────────────────────
+    keywords_chypre = ["musgo de roble", "roble", "moss", "oakmoss", "patchouli", "labdanum", "ámbar", "cedro", "verde", "floral", "cítrico"]
+    # Chypre es una combinación, dar puntos si hay múltiples elementos
+    chypre_count = sum(1 for nota in todas_notas if any(kw in nota for kw in ["musgo", "roble", "patchouli", "labdanum"]))
+    if chypre_count >= 2:
+        puntuaciones["Chypre"] += 3
+    else:
+        for nota in todas_notas:
+            if any(kw in nota for kw in keywords_chypre):
+                puntuaciones["Chypre"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 11. FOUGÈRE (aromático + amaderado + geranio/roble)
+    # ─────────────────────────────────────────────
+    keywords_fougere = ["lavanda", "roble", "geranio", "coumarin", "cumarina", "fougère"]
+    fougere_count = sum(1 for nota in todas_notas if any(kw in nota for kw in keywords_fougere))
+    if fougere_count >= 2:
+        puntuaciones["Fougère"] += 3
+    else:
+        for nota in todas_notas:
+            if any(kw in nota for kw in keywords_fougere):
+                puntuaciones["Fougère"] += 1
+    
+    # ─────────────────────────────────────────────
+    # 12. CUERO
+    # ─────────────────────────────────────────────
+    keywords_cuero = ["cuero", "leather", "tabaco", "tabaco", "birch", "abedul", "humo", "smoke", "incienso", "mirra"]
+    for nota in todas_notas:
+        if any(kw in nota for kw in keywords_cuero):
+            puntuaciones["Cuero"] += 2
+    
+    # ─────────────────────────────────────────────
+    # BONIFICACIONES ADICIONALES
+    # ─────────────────────────────────────────────
+    
+    # Si el nombre contiene palabras clave de familia
+    if "aqua" in nombre_lower or "acqua" in nombre_lower or "water" in nombre_lower:
+        puntuaciones["Acuático"] += 3
+    
+    if "blue" in nombre_lower:
+        puntuaciones["Cítrico"] += 1
+        puntuaciones["Acuático"] += 1
+    
+    if "rose" in nombre_lower or "rosa" in nombre_lower:
+        puntuaciones["Floral"] += 2
+    
+    if "vanilla" in nombre_lower or "vainilla" in nombre_lower:
+        puntuaciones["Gourmand"] += 2
+        puntuaciones["Oriental"] += 1
+    
+    if "wood" in nombre_lower or "madera" in nombre_lower or "bois" in nombre_lower:
+        puntuaciones["Amaderado"] += 2
+    
+    # Si la descripción contiene palabras clave
+    if "fresco" in descripcion_lower or "fresh" in descripcion_lower:
+        puntuaciones["Cítrico"] += 1
+        puntuaciones["Acuático"] += 1
+        puntuaciones["Verde"] += 1
+    
+    if "intenso" in descripcion_lower or "intense" in descripcion_lower:
+        puntuaciones["Oriental"] += 1
+        puntuaciones["Amaderado"] += 1
+    
+    if "seductor" in descripcion_lower or "seductive" in descripcion_lower:
+        puntuaciones["Oriental"] += 1
+        puntuaciones["Gourmand"] += 1
+    
+    # ─────────────────────────────────────────────
+    # DETECCIÓN DE COMBINACIONES ESPECÍFICAS
+    # ─────────────────────────────────────────────
+    
+    # Detectar "Amaderado-Aromático" (común en fragancias masculinas)
+    # Requiere al menos 2 notas amaderadas Y 1 aromática
+    amaderado_count = sum(1 for nota in todas_notas if any(kw in nota for kw in ["sándalo", "cedro", "vetiver", "pachulí", "roble", "pino", "guayaco", "agarwood", "oud", "cashmeran"]))
+    aromatico_count = sum(1 for nota in todas_notas if any(kw in nota for kw in ["lavanda", "romero", "salvia", "menta", "albahaca", "hierbabuena", "tomillo", "pimienta"]))
+    if amaderado_count >= 2 and aromatico_count >= 1:
+        puntuaciones["Amaderado"] += 1
+        puntuaciones["Aromático"] += 1
+    
+    # Detectar "Floral-Gourmand" (común en fragancias femeninas)
+    # Requiere al menos 2 notas florales Y 1 gourmand
+    floral_count = sum(1 for nota in todas_notas if any(kw in nota for kw in ["rosa", "jazmín", "lirio", "peonía", "magnolia", "gardenia", "tuberosa", "ylang-ylang"]))
+    gourmand_count = sum(1 for nota in todas_notas if any(kw in nota for kw in ["vainilla", "caramelo", "chocolate", "café", "miel"]))
+    if floral_count >= 2 and gourmand_count >= 1:
+        puntuaciones["Floral"] += 1
+        puntuaciones["Gourmand"] += 1
+    
+    # Detectar "Cítrico-Acuático" (frescura marina)
+    citrico_count = sum(1 for nota in todas_notas if any(kw in nota for kw in ["limón", "bergamota", "naranja", "mandarina", "pomelo", "toronja"]))
+    acuatico_count = sum(1 for nota in todas_notas if any(kw in nota for kw in ["marina", "marino", "acuático", "sal marina", "agua", "jazmín de agua"]))
+    if citrico_count >= 1 and acuatico_count >= 1:
+        puntuaciones["Cítrico"] += 1
+        puntuaciones["Acuático"] += 1
+    
+    # ─────────────────────────────────────────────
+    # SELECCIÓN DE FAMILIAS
+    # ─────────────────────────────────────────────
+    
+    # Ordenar por puntuación descendente
+    familias_ordenadas = sorted(puntuaciones.items(), key=lambda x: x[1], reverse=True)
+    
+    # Tomar las 2 familias con mayor puntuación (si tienen al menos 2 puntos cada una)
+    resultado = []
+    for familia, puntaje in familias_ordenadas:
+        if puntaje >= 2 and len(resultado) < 2:
+            resultado.append(familia)
+    
+    # Fallback: si no hay ninguna con 2 puntos, tomar la de mayor puntaje
+    if not resultado and familias_ordenadas and familias_ordenadas[0][1] > 0:
+        resultado = [familias_ordenadas[0][0]]
+    
+    # Si todas tienen 0 puntos, asignar basado en género
+    if not resultado:
+        if "hombre" in genero_lower:
+            resultado = ["Aromático", "Amaderado"]
+        elif "mujer" in genero_lower:
+            resultado = ["Floral", "Oriental"]
+        else:
+            resultado = ["Aromático", "Floral"]
+    
+    # Formato: "Familia1-Familia2" o solo la primera si es única
+    return "-".join(resultado) if len(resultado) > 1 else resultado[0]
 
 
 def _normalizar_valor(valor) -> str:
@@ -772,6 +1024,10 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
 
     nombre_fmt  = formatear_nombre(nombre_raw, marca_raw)
     
+    # Traducir descripción al español (se necesita para inferir familia)
+    descripcion_raw = _normalizar_valor(resultado_scraping.get("descripcion", resultado_scraping.get("descripcion_corta", "")))
+    descripcion_trad = traducir_texto(descripcion_raw) if descripcion_raw else ""
+    
     # Si existe referencia, usar las notas, género y familia directamente
     ref = referencia_notas_c.get(nombre_clave)
     if ref:
@@ -783,6 +1039,10 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
         # Si la referencia tiene datos, usarlos; si no, mantener los del scraping
         genero = genero_ref if genero_ref else _normalizar_valor(resultado_scraping.get("genero", "Unisex"))
         familia_olfativa = familia_ref if familia_ref else _normalizar_valor(resultado_scraping.get("familia_olfativa", ""))
+        # Si no hay familia olfativa (ni de referencia ni de scraping), inferirla
+        if not familia_olfativa:
+            familia_olfativa = inferir_familia_olfativa(notas_trad, nombre_raw, descripcion_trad, genero)
+            logger.info(f"Módulo C: Familia olfativa inferida para '{nombre_clave}': {familia_olfativa}")
     else:
         notas_trad  = traducir_notas(resultado_scraping.get("notas", {"salida": [], "corazon": [], "fondo": []}))
         # PRIORIZAR género del CSV (info_lista) sobre el scraping, si existe
@@ -792,14 +1052,14 @@ def procesar(resultado_scraping: dict, info_lista: dict | None = None) -> dict:
         else:
             genero = _normalizar_valor(resultado_scraping.get("genero", "Unisex"))
         familia_olfativa = _normalizar_valor(resultado_scraping.get("familia_olfativa", ""))
+        # Si no hay familia olfativa, inferirla basándonos en las notas
+        if not familia_olfativa:
+            familia_olfativa = inferir_familia_olfativa(notas_trad, nombre_raw, descripcion_trad, genero)
+            logger.info(f"Módulo C: Familia olfativa inferida para '{nombre_clave}': {familia_olfativa}")
     
     # Determinar estaciones con bonificaciones por notas
     estaciones  = determinar_estaciones(resultado_scraping.get("clima", {}), notas_trad)
     img_path    = resultado_scraping.get("imagen_path")
-
-    # Traducir descripción al español
-    descripcion_raw = _normalizar_valor(resultado_scraping.get("descripcion", resultado_scraping.get("descripcion_corta", "")))
-    descripcion_trad = traducir_texto(descripcion_raw) if descripcion_raw else ""
     
     # Inferir ocasiones basadas en notas, descripción, familia y género (sistema inteligente)
     # Si la IA proporcionó ocasiones, las usamos como base; si no, inferimos desde cero
