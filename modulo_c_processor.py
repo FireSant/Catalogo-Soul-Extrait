@@ -81,16 +81,17 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
     # ─────────────────────────────────────────────
     
     # +2 puntos si la familia_olfativa contiene: cítrico, citico, acuático, marino, ozónico o verde,
-    # pero NO contiene palabras de Noche/Elegancia (oriental, ámbar, gourmand, amaderado, etc.)
-    keywords_familia_frescura = ["cítrico", "citico", "acuático", "marino", "ozónico", "verde"]
-    keywords_no_frescura = ["oriental", "ambar", "gourmand", "amaderado", "madera", "chypre", "cuero", "fougere", "especiado"]
+    # pero NO contiene palabras de Noche/Elegancia (oriental, ámbar, gourmand, chypre, cuero, fougere, especiado)
+    # Excluimos "amaderado" de las penalizaciones base porque muchos perfumes frescos tienen bases de madera.
+    keywords_familia_frescura = ["cítrico", "citico", "acuático", "marino", "ozónico", "verde", "frutal", "aromático"]
+    keywords_no_frescura = ["oriental", "ambar", "gourmand", "chypre", "cuero", "fougere", "especiado"]
     if any(keyword in familia_lower for keyword in keywords_familia_frescura):
         # Solo sumar si la familia no contiene indicadores de Noche/Elegancia
         if not any(keyword in familia_lower for keyword in keywords_no_frescura):
             puntuaciones["Frescura y Vitalidad"] += 2
     
-    # +1 punto por cada coincidencia en las notas que contenga: limón, bergamota, menta, naranja o neroli.
-    keywords_notas_frescura = ["limón", "limon", "bergamota", "menta", "naranja", "neroli"]
+    # +1 punto por cada coincidencia en las notas que contenga: limón, bergamota, menta, naranja o neroli, pomelo, etc.
+    keywords_notas_frescura = ["limón", "limon", "bergamota", "menta", "naranja", "neroli", "pomelo", "mandarina", "toronja", "yuzu", "marina", "marinas", "marino", "acuático", "acuáticas", "verde", "verdes", "manzana", "sal marina"]
     for nota in todas_notas:
         if any(keyword in nota for keyword in keywords_notas_frescura):
             puntuaciones["Frescura y Vitalidad"] += 1
@@ -106,8 +107,8 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
         puntuaciones["Frescura y Vitalidad"] -= 5
     
     # -2 puntos (Penalización por contradicción) si la descripción contiene palabras de Noche o Elegancia
-    # Esto evita que perfumes intensos/seductores/amaderados aparezcan en Frescura solo por tener una nota cítrica
-    keywords_contradiccion_frescura = ["intenso", "intensa", "seductor", "seductora", "seducción", "noche", "nocturno", "amaderado", "especiado", "fondo", "corazón especiado", "misterioso", "oscuro", "fiesta", "evento"]
+    # Excluimos "amaderado", "especiado", y "fondo" para evitar castigar perfumes frescos con estas notas base
+    keywords_contradiccion_frescura = ["intenso", "intensa", "seductor", "seductora", "seducción", "noche", "nocturno", "corazón especiado", "misterioso", "oscuro", "fiesta", "evento"]
     if any(keyword in descripcion_lower for keyword in keywords_contradiccion_frescura):
         puntuaciones["Frescura y Vitalidad"] -= 2
     
@@ -146,7 +147,7 @@ def _derivar_colecciones(familia_olfativa: str, genero: str, notas: dict, nombre
         puntuaciones["Elegancia e Intensidad"] += 2
     
     # +1 punto por cada coincidencia en las notas que contenga: sándalo, cedro, oud, incienso, vetiver o pachulí.
-    keywords_notas_elegancia = ["sándalo", "cedro", "oud", "incienso", "vetiver", "pachulí"]
+    keywords_notas_elegancia = ["sándalo", "cedro", "oud", "incienso", "vetiver", "pachulí", "patchouli", "musgo de roble", "musgo", "gaiac", "guayaco"]
     for nota in todas_notas:
         if any(keyword in nota for keyword in keywords_notas_elegancia):
             puntuaciones["Elegancia e Intensidad"] += 1

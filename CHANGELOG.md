@@ -10,6 +10,11 @@
   - Garantiza que TODOS los perfumes tengan una familia olfativa en el índice del PDF
 
 ### Fixed
+- **Bug crítico en asignación de categorías:** El perfume "9PM" aparecía incorrectamente en la colección "Frescura y Vitalidad" debido a que la lógica de puntuación en `_derivar_colecciones()` sumaba 2 puntos por familia olfativa sin considerar que una familia mixta (ej: "Cítrico-Oriental") no debería considerarse fresca:
+  - Modificada la condición de familia para "Frescura y Vitalidad": ahora solo suma 2 puntos si la familia contiene keywords de frescura (cítrico, acuático, marino, ozónico, verde) **Y** no contiene keywords de Noche/Elegancia (oriental, ámbar, gourmand, amaderado, madera, chypre, cuero, fougere, especiado)
+  - Esto evita que perfumes con componentes orientales/amaderados sean clasificados como frescos
+  - El fix afecta a la línea 83-92 de `modulo_c_processor.py`
+
 - **Bug crítico en asignación de imágenes:** Se corrigió el algoritmo `encontrar_imagen_perfume()` que incorrectamente asignaba imágenes de "Lady Million" (mujer) a "1 Million" (hombre) y otros perfumes de hombre:
   - Eliminado fallback que devolvía la primera imagen de la lista sin verificar fuzzy match
   - Mejorado fuzzy matching en paso 2d (género inferido) incluyendo la marca en el nombre objetivo

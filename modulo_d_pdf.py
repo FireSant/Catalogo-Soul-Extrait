@@ -712,16 +712,17 @@ class GeneradorCatalog:
         self.pdf.set_text_color(*COLOR_PRIMARIO)
         self.pdf.cell(0, 15, nombre["titulo"].upper(), 0, 1, "C")
         
-        # Línea de separación debajo del título
-        self.pdf.set_draw_color(*COLOR_ACENTO)
-        self.pdf.set_line_width(0.7) # Más gruesa
-        self.pdf.line(20, self.pdf.get_y(), 190, self.pdf.get_y())
-        self.pdf.ln(8)
-
+        # Si hay subtítulo (marca), lo imprimimos primero
         if nombre["subtitulo"]:
             self.pdf.set_font("helvetica", "I", 16)
             self.pdf.set_text_color(80)
             self.pdf.cell(0, 10, nombre["subtitulo"], 0, 1, "C")
+        
+        # Línea de separación debajo del título (y subtítulo)
+        self.pdf.set_draw_color(*COLOR_ACENTO)
+        self.pdf.set_line_width(0.7) # Más gruesa
+        self.pdf.line(20, self.pdf.get_y(), 190, self.pdf.get_y())
+        self.pdf.ln(8)
         
         # Género
         genero = datos.get("genero", "Unisex")

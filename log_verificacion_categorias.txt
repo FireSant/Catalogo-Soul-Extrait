@@ -1,0 +1,482 @@
+VERIFICACIÓN DE ASIGNACIÓN DE CATEGORÍAS
+================================================================================
+
+Perfume: Sauvage (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 0
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Bleu de Chanel (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 4
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 6
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Acqua di Gio (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 4
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: 1 Million (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -3
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Invictus (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 4
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Eros (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 4
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Noche y Seducción, Frescura y Vitalidad
+
+Perfume: 212 VIP Men (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 1
+Asignación Final: Frescura y Vitalidad
+
+Perfume: Bad Boy (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 1
+Asignación Final: Frescura y Vitalidad
+
+Perfume: Le Male (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 2
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción, Frescura y Vitalidad
+
+Perfume: Ultra Male (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Stronger With You (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -1
+  - Noche y Seducción: 4
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Boss Bottled (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 5
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Light Blue Pour Homme (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 4
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Dylan Blue (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Noche y Seducción, Frescura y Vitalidad
+
+Perfume: Explorer (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -3
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Legend (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 5
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Polo Blue (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 2
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Terre d'Hermes (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 4
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Fahrenheit (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -1
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Y (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Club de Nuit Intense Man (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -4
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 1
+Asignación Final: Noche y Seducción
+
+Perfume: 9PM (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 3
+  - Elegancia e Intensidad: 1
+Asignación Final: Noche y Seducción
+
+Perfume: Hawas (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 0
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Asad (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -2
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 1
+Asignación Final: Noche y Seducción
+
+Perfume: Khamrah (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -5
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 6
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Toy Boy (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 0
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Phantom (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 2
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 1
+Asignación Final: Frescura y Vitalidad
+
+Perfume: Valentino Uomo Born In Roma (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Hacivat (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 6
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Aventus (Hombre)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Good Girl Blush (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -1
+  - Noche y Seducción: 4
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: La Vie Est Belle (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 0
+  - Noche y Seducción: 3
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Black Opium (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -1
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Libre (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Cloud (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 1
+Asignación Final: Noche y Seducción
+
+Perfume: Sweet Like Candy (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 0
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 0
+Asignación Final: Noche y Seducción
+
+Perfume: Thank U Next (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 0
+Asignación Final: Frescura y Vitalidad
+
+Perfume: Ari (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 1
+Asignación Final: Frescura y Vitalidad
+
+Perfume: 212 VIP Rose (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 1
+Asignación Final: Frescura y Vitalidad
+
+Perfume: J'adore (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad, Noche y Seducción, Frescura y Vitalidad
+
+Perfume: Miss Dior (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 1
+Asignación Final: Frescura y Vitalidad
+
+Perfume: Chanel No 5 (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 4
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Coco Mademoiselle (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 5
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Light Blue (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 2
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Bright Crystal (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 2
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 0
+Asignación Final: Frescura y Vitalidad
+
+Perfume: Scandal (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -2
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Lady Million (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 1
+Asignación Final: Noche y Seducción
+
+Perfume: Olympea (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
+
+Perfume: Idole (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 1
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Si (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -1
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 2
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: My Way (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 2
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 1
+Asignación Final: Noche y Seducción, Frescura y Vitalidad
+
+Perfume: Can Can (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 0
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 0
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Fantasy (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 0
+  - Noche y Seducción: 1
+  - Elegancia e Intensidad: 0
+Asignación Final: Noche y Seducción
+
+Perfume: Yara (Mujer)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 3
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 1
+Asignación Final: Frescura y Vitalidad
+
+Perfume: Baccarat Rouge 540 (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -2
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Santal 33 (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -5
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 5
+Asignación Final: Elegancia e Intensidad
+
+Perfume: Tobacco Vanille (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -7
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Lost Cherry (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -5
+  - Noche y Seducción: 2
+  - Elegancia e Intensidad: 7
+Asignación Final: Elegancia e Intensidad, Noche y Seducción
+
+Perfume: Ombre Nomade (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: -7
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 3
+Asignación Final: Elegancia e Intensidad
+
+Perfume: CK One (Unisex)
+Familia Olfativa: 
+Puntuaciones:
+  - Frescura y Vitalidad: 2
+  - Noche y Seducción: 0
+  - Elegancia e Intensidad: 4
+Asignación Final: Elegancia e Intensidad, Frescura y Vitalidad
